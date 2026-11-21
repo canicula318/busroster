@@ -182,6 +182,11 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .login .field > span { display: block; font-weight: 700; font-size: 0.9rem; margin-bottom: 0.4rem; }
 .login form { margin-bottom: 0.5rem; }
 
+.btn.google { gap: 0.6rem; background: #fff; border-color: #dadce0; color: #3c4043; }
+.center-text { text-align: center; margin: 0.4rem 0 0; }
+.divider { display: flex; align-items: center; gap: 0.75rem; color: var(--muted); font-size: 0.8rem; margin: 1.1rem 0; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
 /* ---------- Admin: families ---------- */
 .family { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 0.9rem; margin-top: 0.9rem; }
 .family .name-input { font-weight: 800; }
