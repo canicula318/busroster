@@ -117,6 +117,17 @@ export default function Info({ profile }: { profile: Profile }) {
         )}
         <p className="muted small">学期料金はInvoice（ACH）でお支払いください。単発・片道はSquareのリンクからクレジットカードでお支払いいただけます。</p>
       </section>
+
+      <section className="section">
+        <div className="signed-in">
+          <div>
+            <div className="muted small">ログイン中のアカウント</div>
+            <div className="option-title">{profile.email}</div>
+            <div className="muted small">{profile.isAdmin ? '管理者' : '保護者'}</div>
+          </div>
+          <button className="btn small" onClick={() => supabase.auth.signOut()}>ログアウト</button>
+        </div>
+      </section>
     </div>
   )
 }
