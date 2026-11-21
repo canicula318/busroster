@@ -113,8 +113,8 @@ export default function Roster({ profile, params }: { profile: Profile; params: 
             {groups.filter((g) => g.stop).map((g) => (
               <div key={g.stop!.id}>
                 <b>{g.stop!.name}</b>
-                <span>行き {g.out}人（{g.stop!.am_time}）</span>
-                <span>帰り {g.ret}人（{g.stop!.pm_time}）</span>
+                <span>行き {g.out}人</span>
+                <span>帰り {g.ret}人</span>
               </div>
             ))}
           </div>

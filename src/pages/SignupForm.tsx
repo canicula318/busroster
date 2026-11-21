@@ -140,7 +140,6 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
 
   const locked = !profile.isAdmin && busDate < todayNY()
   const family = profile.families.find((f) => f.id === familyId)
-  const stop = profile.stops.find((st) => st.id === family?.stop_id)
 
   return (
     <form className="signup" onSubmit={save}>
@@ -191,18 +190,6 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
 
       {familyId && (
         <>
-          {stop && (
-            <a className="stop-card" href={href('/info')}>
-              <div>
-                <div className="stop-name">乗車場所：{stop.name}</div>
-                <div className="option-sub">{stop.place}</div>
-              </div>
-              <div className="stop-times">
-                <div><span>行き</span><b>{stop.am_time}</b></div>
-                <div><span>帰り</span><b>{stop.pm_time}</b></div>
-              </div>
-            </a>
-          )}
 
           {existing && !message && (
             <div className="banner info">{formatDate(busDate)}の変更連絡は送信済みです。内容を直す場合は、修正して「更新する」を押してください。</div>
