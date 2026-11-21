@@ -24,7 +24,6 @@ const MIN_ROWS = 24
 /** Printable bus sheet for the parent on duty (当番), modelled on the paper roster. */
 export default function DutySheet({ profile, params }: { profile: Profile; params: URLSearchParams }) {
   const date = params.get('date') ?? upcomingSaturdays(1)[0]
-  const [mode, setMode] = useState<'signed' | 'all'>('signed')
   const [data, setData] = useState<RosterRow[] | null>(null)
   const [contacts, setContacts] = useState<Contact[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +44,7 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
   const rows: Row[] = useMemo(() => {
     if (!data) return []
     const list = data
-      .filter((r) => (mode === 'all' ? true : r.trip !== 'none'))
+      .filter((r) => r.trip !== 'none')
       .map((r) => {
         const stop = stopById.get(r.stop_id ?? '')
         return {
@@ -72,7 +71,7 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
       }
     }
     return list.map((x) => x.row)
-  }, [data, mode, famById, stopById])
+  }, [data, famById, stopById])
 
   if (error) return <div className="banner error">{error}</div>
   if (!data) return <div className="muted pad">読み込み中…</div>
@@ -93,10 +92,6 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
     <div className="sheet-wrap">
       <div className="sheet-tools no-print">
         <a className="btn small" href={href('/roster', { date })}>← 名簿へ</a>
-        <div className="seg">
-          <button className={mode === 'signed' ? 'on' : ''} onClick={() => setMode('signed')}>乗車する人</button>
-          <button className={mode === 'all' ? 'on' : ''} onClick={() => setMode('all')}>お休みも含める</button>
-        </div>
         <button className="btn small primary" onClick={() => window.print()}><IconPrint />&nbsp;印刷</button>
       </div>
       <p className="muted small no-print">{formatDate(date)}の当番シートです。「—」はその便に乗らない予定の生徒です。空欄に○をつけてください。</p>
