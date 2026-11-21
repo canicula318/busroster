@@ -199,9 +199,7 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
           )}
 
           <section className="section">
-            <div className="section-label">
-              生徒{family && (myFamilies.length === 1 || editingOther) && <span className="muted"> ・ {family.name}</span>}
-            </div>
+            {editingOther && family && <div className="banner info">{family.name}の変更連絡を編集しています。</div>}
             {loading && <div className="muted pad">読み込み中…</div>}
             {!loading && students.length === 0 && <div className="muted pad">生徒が登録されていません。バス係にご連絡ください。</div>}
             <div className="student-list">
