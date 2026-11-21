@@ -14,6 +14,8 @@ Weekly bus signup for NJ Japanese Weekend School families. Replaces the Glide ap
 
 ## Who can do what
 
+**Every registered parent email is an admin** (any parent may be the 当番 and needs the printed duty sheet). Emails added in the Families tab become admins automatically. The table below describes the two roles if that is ever narrowed again.
+
 | | Parents | Admins |
 |---|---|---|
 | Sign in | Only with an email listed for their family | Any email in the `admins` table |
