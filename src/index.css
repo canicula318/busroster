@@ -264,7 +264,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .sheet-table td.stop { text-align: center; width: 44px; font-size: 10px; }
 .sheet-table .chk { width: 30px; text-align: center; padding: 0; }
 .sheet-table td.phone { font-size: 11.5px; white-space: nowrap; }
-.sheet-table .na { color: #888; }
+.sheet-table td.off { background: #d9d9d9; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.sheet-table .na { color: #000; font-weight: 900; font-size: 17px; line-height: 1; }
 .sheet-table tr.totals td { border-left: 0; }
 .sheet-table tr.totals td:first-child { border-left: 1px solid #000; }
 .sheet-table .right { text-align: right; font-size: 10.5px; }

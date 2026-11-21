@@ -86,7 +86,8 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
   const unlock = contacts.find((c) => c.admins_only && c.label.includes('ロック'))
   const comments = [...new Map(data.filter((r) => r.comments).map((r) => [r.family_id, r])).values()]
 
-  const mark = (v: boolean) => (v ? null : <span className="na">—</span>)
+  // Not riding this leg: bold × on a shaded cell so it is obvious on paper
+  const mark = (v: boolean) => (v ? null : <span className="na" aria-label="乗らない">×</span>)
 
   return (
     <div className="sheet-wrap">
@@ -94,7 +95,7 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
         <a className="btn small" href={href('/roster', { date })}>← 名簿へ</a>
         <button className="btn small primary" onClick={() => window.print()}><IconPrint />&nbsp;印刷</button>
       </div>
-      <p className="muted small no-print">{formatDate(date)}の当番シートです。「—」はその便に乗らない予定の生徒です。空欄に○をつけてください。</p>
+      <p className="muted small no-print">{formatDate(date)}の当番シートです。「×」はその便に乗らない予定の生徒です。</p>
 
       <div className="sheet">
         <div className="sheet-instr">
@@ -129,8 +130,8 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
                 <td className="en">{r.en}</td>
                 <td className="grade">{r.grade}</td>
                 <td className="stop">{r.stop}</td>
-                <td className="chk">{mark(r.out)}</td>
-                <td className="chk">{mark(r.ret)}</td>
+                <td className={'chk' + (r.out ? '' : ' off')}>{mark(r.out)}</td>
+                <td className={'chk' + (r.ret ? '' : ' off')}>{mark(r.ret)}</td>
                 <td className="phone">{r.phone}</td>
               </tr>
             ))}
