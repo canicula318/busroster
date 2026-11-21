@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
 import type { Family, FamilyEmail, Stop, Student } from '../../types'
 
-export default function Families({ onChanged }: { onChanged: () => void }) {
+export default function Families({ onChanged, ownFamilyIds }: { onChanged: () => void; ownFamilyIds: string[] }) {
   const [families, setFamilies] = useState<Family[] | null>(null)
   const [emails, setEmails] = useState<FamilyEmail[]>([])
   const [students, setStudents] = useState<Student[]>([])
@@ -61,7 +61,7 @@ export default function Families({ onChanged }: { onChanged: () => void }) {
   return (
     <div className="page">
       <h1 className="page-title">家族・生徒 <small>Families</small></h1>
-      <p className="muted small">ログインできるのは、ここに登録されたメールアドレスだけです。1家族に複数のアドレスを登録できます。</p>
+      <p className="muted small">ログインできるのは、ここに登録されたメールアドレスだけです。1家族に複数のアドレスを登録できます。<br />編集できるのは<b>自分の家族だけ</b>です。ほかのご家族の情報は表示のみです（メールアドレスがまだない新しい家族は、どなたでも設定できます）。</p>
       <div className="row wrap">
         <input className="grow" placeholder="検索 / Search" value={filter} onChange={(e) => setFilter(e.target.value)} />
         <form className="row" onSubmit={addFamily}>
@@ -70,23 +70,50 @@ export default function Families({ onChanged }: { onChanged: () => void }) {
         </form>
       </div>
       {error && <div className="banner error">{error}</div>}
-      {shown.map((f) => (
-        <FamilyCard
-          key={f.id}
-          family={f}
-          emails={emails.filter((e) => e.family_id === f.id)}
-          students={students.filter((s) => s.family_id === f.id)}
-          stops={stops}
-          run={run}
-        />
-      ))}
+      {[...shown]
+        .sort((a, b) => Number(ownFamilyIds.includes(b.id)) - Number(ownFamilyIds.includes(a.id)))
+        .map((f) => {
+          const famEmails = emails.filter((e) => e.family_id === f.id)
+          const famStudents = students.filter((s) => s.family_id === f.id)
+          const canEdit = ownFamilyIds.includes(f.id) || famEmails.length === 0
+          return canEdit ? (
+            <FamilyCard key={f.id} family={f} emails={famEmails} students={famStudents} stops={stops} run={run} mine={ownFamilyIds.includes(f.id)} />
+          ) : (
+            <FamilyView key={f.id} family={f} emails={famEmails} students={famStudents} stops={stops} />
+          )
+        })}
+    </div>
+  )
+}
+
+/** Read-only card for a family the signed-in parent doesn't belong to */
+function FamilyView({ family, emails, students, stops }: { family: Family; emails: FamilyEmail[]; students: Student[]; stops: Stop[] }) {
+  const stop = stops.find((st) => st.id === family.stop_id)
+  const active = students.filter((s) => s.active)
+  return (
+    <div className="family view">
+      <div className="fv-head">
+        <span className="option-title">{family.name}</span>
+        {stop && <span className="pill">{stop.name}</span>}
+        <span className="pill gray">表示のみ</span>
+      </div>
+      {family.phone && <div className="small">📞 {family.phone}</div>}
+      <div className="small muted">{emails.map((e) => e.email).join('、')}</div>
+      {active.length > 0 && (
+        <div className="fv-students">
+          {active.map((s) => (
+            <span key={s.id}>{s.name_ja || s.name}<span className="muted small"> {s.grade}</span></span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
 function FamilyCard({
-  family, emails, students, stops, run,
+  family, emails, students, stops, run, mine,
 }: {
+  mine: boolean
   family: Family
   emails: FamilyEmail[]
   students: Student[]
@@ -103,7 +130,8 @@ function FamilyCard({
   const dirty = name !== family.name || phone !== (family.phone ?? '')
 
   return (
-    <div className="family">
+    <div className={"family" + (mine ? " mine" : "")}>
+      {mine && <div className="pill" style={{ alignSelf: "flex-start", margin: "0 0 0.4rem" }}>わが家</div>}
       <div className="row wrap">
         <input className="name-input" value={name} onChange={(e) => setName(e.target.value)} />
         <input className="grow" placeholder="電話 / Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />

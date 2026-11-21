@@ -112,7 +112,7 @@ export default function App() {
       page = <Roster profile={profile} params={route.params} />
       break
     case '/admin/families':
-      page = profile.isAdmin ? <Families onChanged={() => loadProfile(session)} /> : null
+      page = profile.isAdmin ? <Families onChanged={() => loadProfile(session)} ownFamilyIds={profile.ownFamilyIds} /> : null
       break
     default:
       page = <SignupForm profile={profile} params={route.params} />
