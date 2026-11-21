@@ -30,6 +30,8 @@ export default function MySignups({ profile }: { profile: Profile }) {
   if (error) return <div className="banner error">{error}</div>
   if (!signups) return <div className="muted pad">読み込み中…</div>
 
+  const ownIds = profile.isAdmin ? profile.ownFamilyIds : profile.families.map((f) => f.id)
+  const familyNames = profile.families.filter((f) => ownIds.includes(f.id)).map((f) => f.name.split(' ')[0] + '家').join('・')
   const today = todayNY()
   const upcoming = signups.filter((s) => s.bus_date >= today).reverse()
   const past = signups.filter((s) => s.bus_date < today)
@@ -59,11 +61,11 @@ export default function MySignups({ profile }: { profile: Profile }) {
 
   return (
     <div className="page">
-      <h1 className="page-title">連絡履歴 <small>My notices</small></h1>
-      <p className="lead">これまでに送った変更連絡の一覧です。<br />ここに載っていない土曜日は、いつもどおり<b>全員往復</b>で乗車します。</p>
+      <h1 className="page-title">わが家の連絡履歴 <small>My family</small></h1>
+      <p className="lead"><b>{familyNames || 'あなたのご家族'}</b>が送った変更連絡だけを表示しています。ほかのご家族の連絡は「名簿」で確認できます。<br />ここに載っていない土曜日は、お子さんはいつもどおり<b>往復</b>で乗車します。</p>
       <h2 className="section-label">今後の連絡</h2>
       {upcoming.length === 0 ? (
-        <div className="empty">今後の変更連絡はありません。<br />すべての土曜日、いつもどおり全員往復です。<a className="btn primary" href={href('/')}>変更を連絡する</a></div>
+        <div className="empty">わが家の今後の変更連絡はありません。<br />すべての土曜日、いつもどおり往復です。<a className="btn primary" href={href('/')}>変更を連絡する</a></div>
       ) : (
         <ul className="signup-list">{upcoming.map((s) => renderItem(s, true))}</ul>
       )}

@@ -129,7 +129,7 @@ function Shell({ profile, path, children }: { profile: Profile | null; path: str
   const tabs: [string, string, React.ReactNode][] = [
     ['/', '変更連絡', <IconSignup />],
     ['/roster', '名簿', <IconRoster />],
-    ['/my', '連絡履歴', <IconHistory />],
+    ['/my', 'わが家の履歴', <IconHistory />],
     ['/info', '案内', <IconBus />],
   ]
   if (profile?.isAdmin) {
