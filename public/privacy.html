@@ -48,10 +48,10 @@
     <h2>情報を見られる人</h2>
     <ul>
       <li>各ご家庭：自分の家族の情報と変更連絡</li>
-      <li>登録済みの保護者：その週の名簿（生徒の氏名・学年・乗車場所・乗車予定・連絡事項）。当番がLINEグループで共有するためです。</li>
-      <li>バス係（管理者）：すべての情報（電話番号を含む）</li>
+      <li>登録済みの保護者（バス当番を含む）：全家族の名簿（生徒の氏名・学年・乗車場所）、その週の乗車予定と連絡事項、保護者のメールアドレスと電話番号、当番シート。どの保護者もバス当番になる可能性があるためです。</li>
+      <li>家族の情報（名前・電話番号・乗車場所・メールアドレス・生徒）を変更できるのは、その家族のメールアドレスでログインした人だけです。</li>
     </ul>
-    <p>メールアドレスと電話番号は、管理者以外の保護者には表示されません。</p>
+    <p>メールアドレスと電話番号は、登録済みの保護者（バス当番を含む）だけが見られます。登録されていない人やログインしていない人には表示されません。</p>
 
     <h2>保存場所</h2>
     <p>データはSupabase（米国のクラウドデータベース）に保存され、アクセスはログインした登録済みの保護者に限られます。ログイン用のメールはResendを通じて送信されます。</p>
@@ -65,7 +65,7 @@
 
   <div class="card">
     <h2>Summary in English</h2>
-    <p>Summit Line is a volunteer-run app for families using the NJ Japanese Weekend School bus (Summit route) to send weekly ride changes. We store parents' emails, family name, phone numbers and pickup stop, students' names and grades, and weekly ride changes. With Google sign-in we receive only your email address and name. Data is used only to coordinate the school bus, is never sold or used for advertising, and is stored in Supabase. Email addresses and phone numbers are visible only to the bus coordinators. To correct or delete your information, contact <a href="mailto:ArcRed2@qonvomail.com">ArcRed2@qonvomail.com</a>.</p>
+    <p>Summit Line is a volunteer-run app for families using the NJ Japanese Weekend School bus (Summit route) to send weekly ride changes. We store parents' emails, family name, phone numbers and pickup stop, students' names and grades, and weekly ride changes. With Google sign-in we receive only your email address and name. Data is used only to coordinate the school bus, is never sold or used for advertising, and is stored in Supabase. Email addresses and phone numbers are visible only to registered parents (including the parent on bus duty); a family's details can be changed only by someone signed in with that family's email. To correct or delete your information, contact <a href="mailto:ArcRed2@qonvomail.com">ArcRed2@qonvomail.com</a>.</p>
   </div>
 
   <p class="muted">最終更新：2026年11月20日　｜　<a href="./">アプリを開く</a></p>
