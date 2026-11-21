@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../supabase'
 import type { Profile } from '../../App'
 import type { Signup, Student } from '../../types'
-import { TRIP_LABELS, ridesOutbound, ridesReturn } from '../../types'
+import { studentLabel, TRIP_LABELS, ridesOutbound, ridesReturn } from '../../types'
 import { chipLabel, formatDate, formatDateTime, upcomingSaturdays } from '../../lib/dates'
 import { downloadCsv } from '../../lib/csv'
 import { href } from '../../lib/router'
+import { IconPrint } from '../../components/Icons'
 
 const ALL = 'all'
 
@@ -34,13 +35,15 @@ export default function Roster({ profile }: { profile: Profile }) {
     return [...set].sort().reverse()
   }, [signups])
 
+  const stopOf = (familyId: string) => profile.stops.find((st) => st.id === profile.families.find((f) => f.id === familyId)?.stop_id)
+  const stopSort = (familyId: string) => stopOf(familyId)?.sort ?? 99
   const rows = useMemo(
-    () => (signups ?? []).filter((s) => date === ALL || s.bus_date === date).sort((a, b) => a.bus_date.localeCompare(b.bus_date) || famName(a.family_id).localeCompare(famName(b.family_id))),
+    () => (signups ?? []).filter((s) => date === ALL || s.bus_date === date).sort((a, b) => a.bus_date.localeCompare(b.bus_date) || stopSort(a.family_id) - stopSort(b.family_id) || famName(a.family_id).localeCompare(famName(b.family_id))),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [signups, date, profile.families],
   )
 
-  const names = (s: Signup) => s.signup_students.map((x) => students.get(x.student_id)?.name ?? '?')
+  const names = (s: Signup) => s.signup_students.map((x) => (students.get(x.student_id) ? studentLabel(students.get(x.student_id)!) : '?'))
   const riders = (s: Signup) => names(s).length + (s.guest_name ? 1 : 0)
   const outbound = rows.filter((s) => ridesOutbound(s.trip)).reduce((n, s) => n + riders(s), 0)
   const ret = rows.filter((s) => ridesReturn(s.trip)).reduce((n, s) => n + riders(s), 0)
@@ -87,14 +90,31 @@ export default function Roster({ profile }: { profile: Profile }) {
         </select>
         <button className="btn" onClick={exportCsv} disabled={rows.length === 0}>CSV</button>
         <a className="btn" href={href('/', date !== ALL ? { date } : undefined)}>代理申込</a>
+        {date !== ALL && <a className="btn primary" href={href('/admin/sheet', { date })}><IconPrint />&nbsp;当番シート</a>}
       </div>
 
       {date !== ALL && (
-        <div className="stats">
-          <div><div className="stat">{outbound}</div><div className="muted small">行き</div></div>
-          <div><div className="stat">{ret}</div><div className="muted small">帰り</div></div>
-          <div><div className="stat">{rows.length}</div><div className="muted small">家族</div></div>
-        </div>
+        <>
+          <div className="stats">
+            <div><div className="stat">{outbound}</div><div className="muted small">行き</div></div>
+            <div><div className="stat">{ret}</div><div className="muted small">帰り</div></div>
+            <div><div className="stat">{rows.length}</div><div className="muted small">家族</div></div>
+          </div>
+          <div className="stop-stats">
+            {profile.stops.filter((st) => st.kind === 'stop').map((st) => {
+              const here = rows.filter((r) => stopOf(r.family_id)?.id === st.id)
+              const o = here.filter((r) => ridesOutbound(r.trip)).reduce((n, r) => n + riders(r), 0)
+              const b = here.filter((r) => ridesReturn(r.trip)).reduce((n, r) => n + riders(r), 0)
+              return (
+                <div key={st.id}>
+                  <b>{st.name}</b>
+                  <span>行き {o}人（{st.am_time}）</span>
+                  <span>帰り {b}人（{st.pm_time}）</span>
+                </div>
+              )
+            })}
+          </div>
+        </>
       )}
 
       {rows.length === 0 ? (
@@ -106,6 +126,7 @@ export default function Roster({ profile }: { profile: Profile }) {
               <div>
                 <div className="date">
                   {famName(s.family_id)}
+                  {stopOf(s.family_id) && <span className="pill">{stopOf(s.family_id)!.short_name}</span>}
                   {date === ALL && <span className="muted small"> ・ {formatDate(s.bus_date)}</span>}
                 </div>
                 <div>{names(s).join('、')}</div>

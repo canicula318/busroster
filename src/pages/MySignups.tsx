@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 import type { Profile } from '../App'
 import type { Signup, Student } from '../types'
-import { TRIP_LABELS } from '../types'
+import { studentLabel, TRIP_LABELS } from '../types'
 import { formatDate, todayNY } from '../lib/dates'
 import { href } from '../lib/router'
 
@@ -44,7 +44,7 @@ export default function MySignups({ profile }: { profile: Profile }) {
     <li key={s.id}>
       <div>
         <div className="date">{formatDate(s.bus_date)}{familyIds && familyIds.length > 1 && <span className="muted small"> {famName(s.family_id)}</span>}</div>
-        <div>{s.signup_students.map((x) => students.get(x.student_id)?.name).filter(Boolean).join('、')}</div>
+        <div>{s.signup_students.map((x) => (students.get(x.student_id) ? studentLabel(students.get(x.student_id)!) : undefined)).filter(Boolean).join('、')}</div>
         {s.guest_name && <div className="muted small">ゲスト: {s.guest_name}</div>}
         <span className="trip-tag">{TRIP_LABELS[s.trip].ja}</span>
         {s.comments && <div className="comment">💬 {s.comments}</div>}

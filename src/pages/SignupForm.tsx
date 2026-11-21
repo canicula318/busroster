@@ -151,6 +151,7 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
 
   const locked = !profile.isAdmin && busDate < todayNY()
   const family = profile.families.find((f) => f.id === familyId)
+  const stop = profile.stops.find((st) => st.id === family?.stop_id)
 
   return (
     <form className="signup" onSubmit={submit}>
@@ -206,6 +207,19 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
             </div>
           )}
 
+          {stop && (
+            <a className="stop-card" href={href('/info')}>
+              <div>
+                <div className="stop-name">乗車場所：{stop.name}</div>
+                <div className="option-sub">{stop.place}</div>
+              </div>
+              <div className="stop-times">
+                <div><span>行き</span><b>{stop.am_time}</b></div>
+                <div><span>帰り</span><b>{stop.pm_time}</b></div>
+              </div>
+            </a>
+          )}
+
           <section className="section">
             <div className="section-label">
               乗る生徒{family && profile.families.length === 1 && <span className="muted"> ・ {family.name}</span>}
@@ -227,8 +241,8 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
                   >
                     <span className="tick">{on && <IconCheck />}</span>
                     <span className="option-text">
-                      <span className="option-title">{s.name}</span>
-                      {s.grade && <span className="option-sub">{s.grade}</span>}
+                      <span className="option-title">{s.name_ja || s.name}</span>
+                      <span className="option-sub">{[s.name_ja ? s.name : null, s.grade].filter(Boolean).join('・')}</span>
                     </span>
                   </button>
                 )

@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabase'
-import type { Family, FamilyEmail, Student } from '../../types'
+import type { Family, FamilyEmail, Stop, Student } from '../../types'
 
 export default function Families({ onChanged }: { onChanged: () => void }) {
   const [families, setFamilies] = useState<Family[] | null>(null)
   const [emails, setEmails] = useState<FamilyEmail[]>([])
   const [students, setStudents] = useState<Student[]>([])
+  const [stops, setStops] = useState<Stop[]>([])
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
   const [newName, setNewName] = useState('')
 
   const load = useCallback(async () => {
-    const [f, e, s] = await Promise.all([
+    const [f, e, s, st] = await Promise.all([
       supabase.from('families').select('*').order('name'),
       supabase.from('family_emails').select('*').order('email'),
       supabase.from('students').select('*').order('sort').order('name'),
+      supabase.from('stops').select('*').eq('kind', 'stop').order('sort'),
     ])
-    if (f.error || e.error || s.error) return setError((f.error ?? e.error ?? s.error)!.message)
+    if (f.error || e.error || s.error || st.error) return setError((f.error ?? e.error ?? s.error ?? st.error)!.message)
+    setStops(st.data as Stop[])
     setFamilies(f.data as Family[])
     setEmails(e.data as FamilyEmail[])
     setStudents(s.data as Student[])
@@ -52,7 +55,7 @@ export default function Families({ onChanged }: { onChanged: () => void }) {
       !q ||
       f.name.toLowerCase().includes(q) ||
       emails.some((e) => e.family_id === f.id && e.email.includes(q)) ||
-      students.some((s) => s.family_id === f.id && s.name.toLowerCase().includes(q)),
+      students.some((s) => s.family_id === f.id && (s.name.toLowerCase().includes(q) || (s.name_ja ?? '').includes(q))),
   )
 
   return (
@@ -73,6 +76,7 @@ export default function Families({ onChanged }: { onChanged: () => void }) {
           family={f}
           emails={emails.filter((e) => e.family_id === f.id)}
           students={students.filter((s) => s.family_id === f.id)}
+          stops={stops}
           run={run}
         />
       ))}
@@ -81,17 +85,19 @@ export default function Families({ onChanged }: { onChanged: () => void }) {
 }
 
 function FamilyCard({
-  family, emails, students, run,
+  family, emails, students, stops, run,
 }: {
   family: Family
   emails: FamilyEmail[]
   students: Student[]
+  stops: Stop[]
   run: (p: PromiseLike<{ error: { message: string } | null }>) => Promise<boolean>
 }) {
   const [name, setName] = useState(family.name)
   const [phone, setPhone] = useState(family.phone ?? '')
   const [newEmail, setNewEmail] = useState('')
   const [newStudent, setNewStudent] = useState('')
+  const [newStudentJa, setNewStudentJa] = useState('')
   const [newGrade, setNewGrade] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const dirty = name !== family.name || phone !== (family.phone ?? '')
@@ -104,6 +110,13 @@ function FamilyCard({
         {dirty && (
           <button className="btn small primary" onClick={() => run(supabase.from('families').update({ name: name.trim(), phone: phone.trim() || null }).eq('id', family.id))}>保存</button>
         )}
+      </div>
+      <div className="row">
+        <span className="muted small">乗車場所</span>
+        <select value={family.stop_id ?? ''} onChange={(e) => run(supabase.from('families').update({ stop_id: e.target.value || null }).eq('id', family.id))}>
+          <option value="">未設定</option>
+          {stops.map((st) => <option key={st.id} value={st.id}>{st.name}</option>)}
+        </select>
       </div>
 
       <div className="sub">
@@ -132,12 +145,14 @@ function FamilyCard({
         <form className="row" onSubmit={async (ev) => {
           ev.preventDefault()
           if (!newStudent.trim()) return
-          if (await run(supabase.from('students').insert({ family_id: family.id, name: newStudent.trim(), grade: newGrade.trim() || null }))) {
+          if (await run(supabase.from('students').insert({ family_id: family.id, name: newStudent.trim(), name_ja: newStudentJa.trim() || null, grade: newGrade.trim() || null }))) {
             setNewStudent('')
+            setNewStudentJa('')
             setNewGrade('')
           }
         }}>
-          <input placeholder="生徒名 / Name" value={newStudent} onChange={(e) => setNewStudent(e.target.value)} />
+          <input placeholder="氏名（漢字）" value={newStudentJa} onChange={(e) => setNewStudentJa(e.target.value)} />
+          <input placeholder="Name (英語)" value={newStudent} onChange={(e) => setNewStudent(e.target.value)} />
           <input placeholder="学年 / Grade" value={newGrade} onChange={(e) => setNewGrade(e.target.value)} />
           <button className="btn small">追加</button>
         </form>
@@ -160,13 +175,15 @@ function FamilyCard({
 
 function StudentRow({ student, run }: { student: Student; run: (p: PromiseLike<{ error: { message: string } | null }>) => Promise<boolean> }) {
   const [name, setName] = useState(student.name)
+  const [nameJa, setNameJa] = useState(student.name_ja ?? '')
   const [grade, setGrade] = useState(student.grade ?? '')
-  const dirty = name !== student.name || grade !== (student.grade ?? '')
+  const dirty = name !== student.name || grade !== (student.grade ?? '') || nameJa !== (student.name_ja ?? '')
   return (
     <div className={'row student' + (student.active ? '' : ' dim')}>
-      <input value={name} onChange={(e) => setName(e.target.value)} />
+      <input value={nameJa} placeholder="氏名（漢字）" onChange={(e) => setNameJa(e.target.value)} />
+      <input value={name} placeholder="Name" onChange={(e) => setName(e.target.value)} />
       <input value={grade} placeholder="学年" onChange={(e) => setGrade(e.target.value)} />
-      {dirty && <button className="btn small primary" onClick={() => run(supabase.from('students').update({ name: name.trim(), grade: grade.trim() || null }).eq('id', student.id))}>保存</button>}
+      {dirty && <button className="btn small primary" onClick={() => run(supabase.from('students').update({ name: name.trim(), name_ja: nameJa.trim() || null, grade: grade.trim() || null }).eq('id', student.id))}>保存</button>}
       <label className="check small">
         <input type="checkbox" checked={student.active} onChange={(e) => run(supabase.from('students').update({ active: e.target.checked }).eq('id', student.id))} />
         在籍 Active

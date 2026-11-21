@@ -22,3 +22,12 @@ export const IconCheck = () => (
 export const IconLogout = () => (
   <svg {...base} width={20} height={20} aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11" /></svg>
 )
+export const IconBus = () => (
+  <svg {...base} aria-hidden="true"><rect x="4" y="3" width="16" height="15" rx="3" /><path d="M4 11h16M8 18v2M16 18v2M8 14.5h.01M16 14.5h.01M9 6.5h6" /></svg>
+)
+export const IconPhone = () => (
+  <svg {...base} width={18} height={18} aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" /></svg>
+)
+export const IconPrint = () => (
+  <svg {...base} width={18} height={18} aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="7" /></svg>
+)

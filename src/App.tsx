@@ -2,15 +2,16 @@ import { useCallback, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
 import { href, useRoute } from './lib/router'
-import type { Family } from './types'
+import type { Family, Stop } from './types'
 import Login from './pages/Login'
 import SignupForm from './pages/SignupForm'
 import MySignups from './pages/MySignups'
-import Payment from './pages/Payment'
+import Info from './pages/Info'
+import DutySheet from './pages/admin/DutySheet'
 import Roster from './pages/admin/Roster'
 import Families from './pages/admin/Families'
 import { Brand } from './components/Brand'
-import { IconFamilies, IconHistory, IconLogout, IconPay, IconRoster, IconSignup } from './components/Icons'
+import { IconFamilies, IconHistory, IconLogout, IconBus, IconRoster, IconSignup } from './components/Icons'
 
 export interface Profile {
   email: string
@@ -18,6 +19,7 @@ export interface Profile {
   families: Family[]
   /** Families this email belongs to (for admins, `families` is everyone) */
   ownFamilyIds: string[]
+  stops: Stop[]
 }
 
 export default function App() {
@@ -41,13 +43,15 @@ export default function App() {
   const loadProfile = useCallback(async (s: Session) => {
     setProfileError(null)
     const email = (s.user.email ?? '').toLowerCase()
-    const [admins, families, own] = await Promise.all([
+    const [admins, families, own, stops] = await Promise.all([
       supabase.from('admins').select('email').eq('email', email),
       supabase.from('families').select('*').order('name'),
       supabase.from('family_emails').select('family_id').eq('email', email),
+      supabase.from('stops').select('*').order('sort'),
     ])
-    if (admins.error || families.error || own.error) {
-      setProfileError((admins.error ?? families.error ?? own.error)!.message)
+    const err = admins.error ?? families.error ?? own.error ?? stops.error
+    if (err) {
+      setProfileError(err.message)
       return
     }
     setProfile({
@@ -55,6 +59,7 @@ export default function App() {
       isAdmin: (admins.data ?? []).length > 0,
       families: families.data ?? [],
       ownFamilyIds: (own.data ?? []).map((r) => r.family_id),
+      stops: (stops.data ?? []) as Stop[],
     })
   }, [])
 
@@ -95,8 +100,12 @@ export default function App() {
     case '/my':
       page = <MySignups profile={profile} />
       break
+    case '/info':
     case '/payment':
-      page = <Payment />
+      page = <Info profile={profile} />
+      break
+    case '/admin/sheet':
+      page = profile.isAdmin ? <DutySheet profile={profile} params={route.params} /> : null
       break
     case '/admin/roster':
       page = profile.isAdmin ? <Roster profile={profile} /> : null
@@ -119,13 +128,13 @@ function Shell({ profile, path, children }: { profile: Profile | null; path: str
   const tabs: [string, string, React.ReactNode][] = [
     ['/', '申込', <IconSignup />],
     ['/my', '履歴', <IconHistory />],
-    ['/payment', '支払い', <IconPay />],
+    ['/info', '案内', <IconBus />],
   ]
   if (profile?.isAdmin) {
     tabs.push(['/admin/roster', '名簿', <IconRoster />], ['/admin/families', '家族', <IconFamilies />])
   }
   return (
-    <div className={'shell' + (tabs.length > 3 ? ' admin' : '')}>
+    <div className={'shell' + (tabs.length > 3 ? ' admin' : '') + (path === '/admin/sheet' ? ' print-mode' : '')}>
       <header className="topbar">
         <div className="topbar-inner">
           <a href={href('/')} className="brand-link"><Brand /></a>

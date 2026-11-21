@@ -5,6 +5,29 @@ export interface Family {
   name: string
   phone: string | null
   notes: string | null
+  stop_id: string | null
+}
+
+export interface Stop {
+  id: string
+  name: string
+  short_name: string | null
+  place: string | null
+  address: string | null
+  kind: 'stop' | 'school'
+  am_time: string | null
+  pm_time: string | null
+  sort: number
+}
+
+export interface Contact {
+  id: string
+  label: string
+  name: string | null
+  phone: string | null
+  note: string | null
+  admins_only: boolean
+  sort: number
 }
 
 export interface FamilyEmail {
@@ -16,6 +39,7 @@ export interface Student {
   id: string
   family_id: string
   name: string
+  name_ja: string | null
   grade: string | null
   active: boolean
   sort: number
@@ -57,4 +81,14 @@ export function ridesOutbound(t: Trip) {
 }
 export function ridesReturn(t: Trip) {
   return t === 'both' || t === 'return'
+}
+
+export const studentLabel = (s: Pick<Student, 'name' | 'name_ja'>) => s.name_ja || s.name
+
+export function mapsUrl(address: string) {
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address)
+}
+
+export function telUrl(phone: string) {
+  return 'tel:' + phone.replace(/[^\d+]/g, '')
 }
