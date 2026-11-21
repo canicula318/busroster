@@ -60,7 +60,7 @@ export function lineMessage(date: string, rows: RosterRow[], stops: Stop[]): str
   lines.push('', '▼人数')
   for (const g of groups) {
     if (!g.stop) continue
-    lines.push(`${g.stop.name}：行き ${g.out}人（${g.stop.am_time}）／帰り ${g.ret}人（${g.stop.pm_time}）`)
+    lines.push(`${g.stop.name}：行き ${g.out}人／帰り ${g.ret}人`)
   }
   const totalOut = groups.reduce((n, g) => n + g.out, 0)
   const totalRet = groups.reduce((n, g) => n + g.ret, 0)

@@ -54,6 +54,12 @@ export default function Roster({ profile, params }: { profile: Profile; params: 
     setTimeout(() => setCopied(false), 2500)
   }
 
+  function sendToLine() {
+    const url = 'https://line.me/R/' + 'share?text=' + encodeURIComponent(message)
+    const w = window.open(url, '_blank', 'noopener')
+    if (!w) window.location.href = url
+  }
+
   async function share() {
     try {
       await navigator.share({ text: message })
@@ -142,9 +148,10 @@ export default function Roster({ profile, params }: { profile: Profile; params: 
             <h2 className="section-label">LINEに送る文面</h2>
             <pre className="line-preview">{message}</pre>
             <div className="line-actions">
-              <a className="btn line" href={'https://line.me/R/share?text=' + encodeURIComponent(message)} target="_blank" rel="noopener noreferrer">
+              {/* A plain button (not a line.me link) so ad blockers that hide "share" links don't remove it */}
+              <button type="button" className="btn send-chat" onClick={sendToLine}>
                 LINEで送る
-              </a>
+              </button>
               <button type="button" className="btn" onClick={copy}><IconCopy />&nbsp;{copied ? 'コピーしました' : 'コピー'}</button>
               {canShare && <button type="button" className="btn" onClick={share}><IconShare />&nbsp;共有</button>}
             </div>

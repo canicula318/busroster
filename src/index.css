@@ -310,7 +310,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .line-preview { white-space: pre-wrap; font-family: inherit; font-size: 0.88rem; line-height: 1.6; background: #f7f7f5; border-radius: 12px; padding: 0.8rem; margin: 0 0 0.75rem; max-height: 340px; overflow: auto; }
 .line-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .line-actions .btn { flex: 1 1 auto; gap: 0.2rem; }
-.btn.line { background: #06c755; border-color: #06c755; color: #fff; flex: 2 1 100%; }
+.btn.send-chat { background: #06c755; border-color: #06c755; color: #fff; flex: 2 1 100%; }
 .full-group { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 0.6rem 0.9rem; margin-top: 0.6rem; }
 .full-group-head { font-weight: 800; padding: 0.2rem 0 0.4rem; border-bottom: 1px solid var(--line); }
 .full-row { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid #f0f0ec; gap: 0.5rem; }
