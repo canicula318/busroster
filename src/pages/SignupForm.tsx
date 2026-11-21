@@ -25,7 +25,7 @@ let guestKey = 1
 export default function SignupForm({ profile, params }: { profile: Profile; params: URLSearchParams }) {
   const saturdays = useMemo(() => upcomingSaturdays(10), [])
   const initialDate = params.get('date')
-  const [busDate, setBusDate] = useState(
+  const [busDate] = useState(
     initialDate && isSaturday(initialDate) && (initialDate >= todayNY() || profile.isAdmin) ? initialDate : saturdays[0],
   )
   const [familyId, setFamilyId] = useState(
@@ -34,7 +34,6 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
   )
   const [students, setStudents] = useState<Student[]>([])
   const [existing, setExisting] = useState<Signup | null>(null)
-  const [changedDates, setChangedDates] = useState<Set<string>>(new Set())
   const [trips, setTrips] = useState<Record<string, Trip>>({})
   const [guests, setGuests] = useState<Guest[]>([])
   const [comments, setComments] = useState('')
@@ -42,11 +41,6 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
 
-  const dateOptions = useMemo(() => {
-    const set = new Set(saturdays)
-    if (busDate) set.add(busDate)
-    return [...set].sort()
-  }, [saturdays, busDate])
 
   function applySignup(s: Signup | null, list: Student[]) {
     setExisting(s)
@@ -57,17 +51,6 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
     setGuests([...(s?.signup_guests ?? [])].sort((a, b) => a.sort - b.sort).map((g) => ({ key: guestKey++, name: g.name, trip: g.trip })))
     setComments(s?.comments ?? '')
   }
-
-  // Dates with a change notice already sent (marker on the chips)
-  useEffect(() => {
-    if (!familyId) return
-    supabase
-      .from('signups')
-      .select('bus_date')
-      .eq('family_id', familyId)
-      .gte('bus_date', dateOptions[0])
-      .then(({ data }) => setChangedDates(new Set((data ?? []).map((r) => r.bus_date))))
-  }, [familyId, dateOptions, existing])
 
   useEffect(() => {
     if (!familyId) {
@@ -153,28 +136,6 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
         </div>
       )}
 
-      <section className="section">
-        <div className="section-label">バス利用日（土曜日）</div>
-        <div className="chips" role="radiogroup" aria-label="バス利用日">
-          {dateOptions.map((d) => {
-            const { md, rel } = chipLabel(d, saturdays)
-            return (
-              <button
-                type="button"
-                key={d}
-                role="radio"
-                aria-checked={busDate === d}
-                className={'chip-date' + (busDate === d ? ' on' : '')}
-                onClick={() => { setMessage(null); setBusDate(d) }}
-              >
-                <span className="chip-rel">{rel || '土'}</span>
-                <span className="chip-md">{md}</span>
-                {changedDates.has(d) && <span className="chip-dot">変更あり</span>}
-              </button>
-            )
-          })}
-        </div>
-      </section>
 
       {profile.families.length > 1 && (
         <section className="section">
