@@ -64,7 +64,7 @@ export default function Login() {
               </svg>
               Googleでログイン
             </button>
-            <p className="muted small center-text">登録メールがGmail・Googleアカウントの方</p>
+            <p className="muted small center-text">登録メールがGmail・Googleアカウントの方。<br />Googleの画面に「…supabase.co」と出ますが、このアプリのログイン用サービスです。</p>
             <div className="divider"><span>または メールでログイン</span></div>
           </>
         )}
