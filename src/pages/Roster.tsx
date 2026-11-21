@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Profile } from '../App'
 import type { RosterRow } from '../types'
 import { TRIP_LABELS } from '../types'
-import { chipLabel, formatDate, isSaturday, upcomingSaturdays } from '../lib/dates'
+import { chipLabel, formatDate, isSaturday, busSaturdays } from '../lib/dates'
 import { byStop, fetchRoster, lineMessage, personLabel } from '../lib/roster'
 import { downloadCsv } from '../lib/csv'
 import { href } from '../lib/router'
@@ -13,7 +13,7 @@ import { IconCopy, IconPrint, IconShare } from '../components/Icons'
  * changes to the LINE group. Admins get extra tools (CSV, duty sheet, edit).
  */
 export default function Roster({ profile, params }: { profile: Profile; params: URLSearchParams }) {
-  const upcoming = useMemo(() => upcomingSaturdays(8), [])
+  const upcoming = useMemo(() => busSaturdays(8, new Set(profile.noBus.keys())), [])
   const p = params.get('date')
   const [date, setDate] = useState(p && isSaturday(p) ? p : upcoming[0])
   const [rows, setRows] = useState<RosterRow[] | null>(null)

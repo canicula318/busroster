@@ -20,6 +20,8 @@ export interface Profile {
   /** Families this email belongs to (for admins, `families` is everyone) */
   ownFamilyIds: string[]
   stops: Stop[]
+  /** School holidays (no bus): date -> reason */
+  noBus: Map<string, string>
 }
 
 export default function App() {
@@ -43,13 +45,14 @@ export default function App() {
   const loadProfile = useCallback(async (s: Session) => {
     setProfileError(null)
     const email = (s.user.email ?? '').toLowerCase()
-    const [admins, families, own, stops] = await Promise.all([
+    const [admins, families, own, stops, holidays] = await Promise.all([
       supabase.from('admins').select('email').eq('email', email),
       supabase.from('families').select('*').order('name'),
       supabase.from('family_emails').select('family_id').eq('email', email),
       supabase.from('stops').select('*').order('sort'),
+      supabase.from('no_bus_days').select('day, reason').order('day'),
     ])
-    const err = admins.error ?? families.error ?? own.error ?? stops.error
+    const err = admins.error ?? families.error ?? own.error ?? stops.error ?? holidays.error
     if (err) {
       setProfileError(err.message)
       return
@@ -60,6 +63,7 @@ export default function App() {
       families: families.data ?? [],
       ownFamilyIds: (own.data ?? []).map((r) => r.family_id),
       stops: (stops.data ?? []) as Stop[],
+      noBus: new Map((holidays.data ?? []).map((h) => [h.day as string, (h.reason as string) ?? '休業日'])),
     })
   }, [])
 

@@ -4,7 +4,7 @@ import type { Profile } from '../../App'
 import type { Contact, RosterRow } from '../../types'
 import { fetchRoster } from '../../lib/roster'
 import { ridesOutbound, ridesReturn } from '../../types'
-import { formatDate, upcomingSaturdays } from '../../lib/dates'
+import { busSaturdays, formatDate } from '../../lib/dates'
 import { href } from '../../lib/router'
 import { IconPrint } from '../../components/Icons'
 
@@ -23,7 +23,7 @@ const MIN_ROWS = 24
 
 /** Printable bus sheet for the parent on duty (当番), modelled on the paper roster. */
 export default function DutySheet({ profile, params }: { profile: Profile; params: URLSearchParams }) {
-  const date = params.get('date') ?? upcomingSaturdays(1)[0]
+  const date = params.get('date') ?? busSaturdays(1, new Set(profile.noBus.keys()))[0]
   const [data, setData] = useState<RosterRow[] | null>(null)
   const [contacts, setContacts] = useState<Contact[]>([])
   const [error, setError] = useState<string | null>(null)

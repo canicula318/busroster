@@ -3,7 +3,7 @@ import { supabase } from '../supabase'
 import type { Profile } from '../App'
 import type { Signup, Student, Trip } from '../types'
 import { SIGNUP_SELECT, TRIP_LABELS } from '../types'
-import { chipLabel, formatDate, isSaturday, todayNY, upcomingSaturdays } from '../lib/dates'
+import { chipLabel, formatDate, isSaturday, todayNY, busSaturdays } from '../lib/dates'
 import { href } from '../lib/router'
 
 interface Guest {
@@ -23,7 +23,7 @@ let guestKey = 1
  * a family only sends something when that week is different.
  */
 export default function SignupForm({ profile, params }: { profile: Profile; params: URLSearchParams }) {
-  const saturdays = useMemo(() => upcomingSaturdays(10), [])
+  const saturdays = useMemo(() => busSaturdays(10, new Set(profile.noBus.keys())), [])
   const initialDate = params.get('date')
   const [busDate, setBusDate] = useState(
     initialDate && isSaturday(initialDate) && (initialDate >= todayNY() || profile.isAdmin) ? initialDate : saturdays[0],

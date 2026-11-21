@@ -4,6 +4,7 @@ import type { Profile } from '../App'
 import type { Contact, Fare, Stop } from '../types'
 import { mapsUrl, telUrl } from '../types'
 import { IconPhone } from '../components/Icons'
+import { formatDate, isSaturday, todayNY } from '../lib/dates'
 
 const money = (cents: number | null) =>
   cents == null ? '' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: cents % 100 ? 2 : 0 }).format(cents / 100)
@@ -24,6 +25,8 @@ export default function Info({ profile }: { profile: Profile }) {
     })
   }, [])
 
+  const today = todayNY()
+  const upcomingNoBus = [...profile.noBus.entries()].filter(([d]) => d >= today && isSaturday(d))
   const stops = profile.stops.filter((s) => s.kind === 'stop')
   const school = profile.stops.find((s) => s.kind === 'school')
   // My family's stop (parents) so it can be highlighted
@@ -63,6 +66,22 @@ export default function Info({ profile }: { profile: Profile }) {
         </div>
         {myStopId && <p className="muted small">緑色があなたの乗車場所です。</p>}
       </section>
+
+      {upcomingNoBus.length > 0 && (
+        <section className="section">
+          <h2 className="section-label">バスのない日（休業日）</h2>
+          <ul className="place-list">
+            {upcomingNoBus.map(([d, reason]) => (
+              <li key={d}>
+                <div>
+                  <div className="option-title">{formatDate(d)}</div>
+                  <div className="option-sub">{reason}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="section">
         <h2 className="section-label">乗車場所・学校</h2>
