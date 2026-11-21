@@ -154,7 +154,6 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
       )}
 
       <section className="section">
-        <div className="section-label">バス利用日（土曜日）</div>
         <div className="chips" role="radiogroup" aria-label="バス利用日">
           {dateOptions.map((d) => {
             const { md, rel } = chipLabel(d, saturdays)
