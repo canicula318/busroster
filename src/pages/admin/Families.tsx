@@ -44,7 +44,7 @@ export default function Families({ onChanged }: { onChanged: () => void }) {
     if (await run(supabase.from('families').insert({ name: newName.trim() }))) setNewName('')
   }
 
-  if (!families) return <div className="card muted">{error ?? '読み込み中…'}</div>
+  if (!families) return <div className="muted pad">{error ?? '読み込み中…'}</div>
 
   const q = filter.trim().toLowerCase()
   const shown = families.filter(
@@ -56,8 +56,8 @@ export default function Families({ onChanged }: { onChanged: () => void }) {
   )
 
   return (
-    <div className="card">
-      <h1>家族・生徒 <span className="muted small">Families & students</span></h1>
+    <div className="page">
+      <h1 className="page-title">家族・生徒 <small>Families</small></h1>
       <p className="muted small">ログインできるのは、ここに登録されたメールアドレスだけです。1家族に複数のアドレスを登録できます。</p>
       <div className="row wrap">
         <input className="grow" placeholder="検索 / Search" value={filter} onChange={(e) => setFilter(e.target.value)} />
@@ -66,7 +66,7 @@ export default function Families({ onChanged }: { onChanged: () => void }) {
           <button className="btn primary">追加</button>
         </form>
       </div>
-      {error && <div className="error">{error}</div>}
+      {error && <div className="banner error">{error}</div>}
       {shown.map((f) => (
         <FamilyCard
           key={f.id}

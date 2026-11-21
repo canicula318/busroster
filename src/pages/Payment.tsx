@@ -16,28 +16,27 @@ export default function Payment() {
     })
   }, [])
 
-  if (error) return <div className="card error">{error}</div>
-  if (!fares) return <div className="card muted">読み込み中…</div>
+  if (error) return <div className="banner error">{error}</div>
+  if (!fares) return <div className="muted pad">読み込み中…</div>
 
   return (
-    <div className="card">
-      <h1>支払い <span className="muted small">Payment</span></h1>
-      <div className="table-wrap">
-        <table>
-          <thead><tr><th>料金プラン / Plan</th><th>支払い方法 / Method</th><th className="num">料金</th><th></th></tr></thead>
-          <tbody>
-            {fares.map((f) => (
-              <tr key={f.id}>
-                <td><b>{f.name}</b></td>
-                <td>{f.method}</td>
-                <td className="num">{money(f.price_cents)}</td>
-                <td>{f.link && <a className="btn small" href={f.link} target="_blank" rel="noopener noreferrer">支払う / Pay</a>}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="muted small">学期料金はInvoice（ACH）でお支払いください。単発・片道はSquareのリンクからクレジットカードでお支払いいただけます。</p>
+    <div className="page">
+      <h1 className="page-title">支払い <small>Payment</small></h1>
+      <ul className="fare-list">
+        {fares.map((f) => (
+          <li key={f.id}>
+            <div className="fare-top">
+              <div className="option-title">{f.name}</div>
+              <div className="fare-price">{money(f.price_cents)}</div>
+            </div>
+            <div className="option-sub">{f.method}</div>
+            {f.link && (
+              <a className="btn primary wide" href={f.link} target="_blank" rel="noopener noreferrer">Squareで支払う</a>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="muted small pad">学期料金はInvoice（ACH）でお支払いください。単発・片道はSquareのリンクからクレジットカードでお支払いいただけます。</p>
     </div>
   )
 }

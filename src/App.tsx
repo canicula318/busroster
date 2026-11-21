@@ -9,6 +9,8 @@ import MySignups from './pages/MySignups'
 import Payment from './pages/Payment'
 import Roster from './pages/admin/Roster'
 import Families from './pages/admin/Families'
+import { Brand } from './components/Brand'
+import { IconFamilies, IconHistory, IconLogout, IconPay, IconRoster, IconSignup } from './components/Icons'
 
 export interface Profile {
   email: string
@@ -59,7 +61,7 @@ export default function App() {
   if (profileError) {
     return (
       <Shell profile={null} path={route.path}>
-        <div className="card error">データを読み込めませんでした: {profileError}</div>
+        <div className="banner error">データを読み込めませんでした: {profileError}</div>
       </Shell>
     )
   }
@@ -68,13 +70,13 @@ export default function App() {
   if (!profile.isAdmin && profile.families.length === 0) {
     return (
       <Shell profile={profile} path={route.path}>
-        <div className="card">
-          <h2>登録されていないメールアドレスです</h2>
+        <div className="page">
+          <h2 className="page-title">登録されていないメールアドレスです</h2>
           <p>
             <b>{profile.email}</b> はまだ名簿に登録されていません。登録済みのアドレスでログインし直すか、バス係にご連絡ください。
           </p>
           <p className="muted">This email isn't on the bus roster yet. Please sign in with the email you registered, or contact the bus coordinator.</p>
-          <button className="btn" onClick={() => supabase.auth.signOut()}>ログアウト / Sign out</button>
+          <button className="btn wide" onClick={() => supabase.auth.signOut()}>別のメールでログインし直す</button>
         </div>
       </Shell>
     )
@@ -100,39 +102,49 @@ export default function App() {
 
   return (
     <Shell profile={profile} path={route.path}>
-      {page ?? <div className="card">ページが見つかりません</div>}
+      {page ?? <div className="empty">ページが見つかりません</div>}
     </Shell>
   )
 }
 
 function Shell({ profile, path, children }: { profile: Profile | null; path: string; children: React.ReactNode }) {
-  const tabs: [string, string][] = [
-    ['/', '申込'],
-    ['/my', '履歴'],
-    ['/payment', '支払い'],
+  const tabs: [string, string, React.ReactNode][] = [
+    ['/', '申込', <IconSignup />],
+    ['/my', '履歴', <IconHistory />],
+    ['/payment', '支払い', <IconPay />],
   ]
   if (profile?.isAdmin) {
-    tabs.push(['/admin/roster', '名簿'], ['/admin/families', '家族'])
+    tabs.push(['/admin/roster', '名簿', <IconRoster />], ['/admin/families', '家族', <IconFamilies />])
   }
   return (
-    <>
+    <div className={'shell' + (tabs.length > 3 ? ' admin' : '')}>
       <header className="topbar">
         <div className="topbar-inner">
-          <a className="brand" href={href('/')}>🚌 BusRoster</a>
-          <nav>
+          <a href={href('/')} className="brand-link"><Brand /></a>
+          <nav className="toptabs">
             {tabs.map(([p, label]) => (
               <a key={p} href={href(p)} className={path === p ? 'active' : ''}>{label}</a>
             ))}
           </nav>
           {profile && (
-            <div className="who">
-              <span className="muted small">{profile.email}</span>
-              <button className="link" onClick={() => supabase.auth.signOut()}>ログアウト</button>
-            </div>
+            <button className="icon-btn" onClick={() => supabase.auth.signOut()} title={'ログアウト（' + profile.email + '）'}>
+              <IconLogout />
+              <span className="icon-btn-label">ログアウト</span>
+            </button>
           )}
         </div>
       </header>
       <main className="container">{children}</main>
-    </>
+      {profile && (
+        <nav className="tabbar">
+          {tabs.map(([p, label, icon]) => (
+            <a key={p} href={href(p)} className={path === p ? 'active' : ''}>
+              {icon}
+              <span>{label}</span>
+            </a>
+          ))}
+        </nav>
+      )}
+    </div>
   )
 }

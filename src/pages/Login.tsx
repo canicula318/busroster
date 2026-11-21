@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { appUrl, supabase } from '../supabase'
+import { Brand } from '../components/Brand'
 
 function hashError(): string | null {
   const h = new URLSearchParams(window.location.hash.replace(/^#/, ''))
@@ -41,15 +42,15 @@ export default function Login() {
   return (
     <div className="login">
       <div className="card">
-        <h1>🚌 BusRoster</h1>
-        <p className="muted">NJ Japanese Weekend School バス申込</p>
+        <Brand large />
+        <p className="muted login-lead">ご登録のメールアドレスにログイン用のリンクをお送りします。<br /><span className="small">We'll email you a sign-in link.</span></p>
         {!sent ? (
           <form onSubmit={sendLink}>
             <label className="field">
-              <span>登録メールアドレス / Registered email</span>
+              <span>メールアドレス <small className="muted">Email</small></span>
               <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
             </label>
-            <button className="btn primary wide" disabled={busy}>{busy ? '送信中…' : 'ログインリンクを送信 / Email me a sign-in link'}</button>
+            <button className="btn primary wide" disabled={busy}>{busy ? '送信中…' : 'ログインリンクを送信'}</button>
           </form>
         ) : (
           <>
@@ -59,12 +60,12 @@ export default function Login() {
             </div>
             <form onSubmit={verifyCode}>
               <label className="field">
-                <span>メールに6桁のコードがある場合はこちらに入力 / Or enter the 6-digit code</span>
+                <span>メールに6桁のコードがある場合 <small className="muted">6-digit code</small></span>
                 <input inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" />
               </label>
-              <button className="btn wide" disabled={busy || code.trim().length < 6}>コードでログイン / Sign in with code</button>
+              <button className="btn wide" disabled={busy || code.trim().length < 6}>コードでログイン</button>
             </form>
-            <button className="link" onClick={() => { setSent(false); setCode('') }}>別のメールアドレスを使う / Use a different email</button>
+            <button className="link" onClick={() => { setSent(false); setCode('') }}>別のメールアドレスを使う</button>
           </>
         )}
         {error && <div className="error">{error}</div>}

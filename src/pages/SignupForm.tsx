@@ -3,11 +3,19 @@ import { supabase } from '../supabase'
 import type { Profile } from '../App'
 import type { Signup, Student, Trip } from '../types'
 import { TRIP_LABELS, TRIP_ORDER } from '../types'
-import { formatDate, isSaturday, todayNY, upcomingSaturdays } from '../lib/dates'
+import { chipLabel, formatDate, isSaturday, todayNY, upcomingSaturdays } from '../lib/dates'
 import { href } from '../lib/router'
+import { IconCheck } from '../components/Icons'
+
+const TRIP_HINT: Record<Trip, string> = {
+  both: '行きも帰りも乗ります',
+  outbound: '学校へ行くときだけ',
+  return: '家に帰るときだけ',
+  none: '今週は乗りません',
+}
 
 export default function SignupForm({ profile, params }: { profile: Profile; params: URLSearchParams }) {
-  const saturdays = useMemo(() => upcomingSaturdays(16), [])
+  const saturdays = useMemo(() => upcomingSaturdays(10), [])
   const initialDate = params.get('date')
   const [busDate, setBusDate] = useState(
     initialDate && isSaturday(initialDate) && (initialDate >= todayNY() || profile.isAdmin) ? initialDate : saturdays[0],
@@ -15,10 +23,12 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
   const [familyId, setFamilyId] = useState(params.get('family') ?? (profile.families.length === 1 ? profile.families[0].id : ''))
   const [students, setStudents] = useState<Student[]>([])
   const [existing, setExisting] = useState<Signup | null>(null)
+  const [signedDates, setSignedDates] = useState<Set<string>>(new Set())
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [trip, setTrip] = useState<Trip | ''>('')
   const [guest, setGuest] = useState('')
   const [comments, setComments] = useState('')
+  const [showExtra, setShowExtra] = useState(false)
   const [loading, setLoading] = useState(false)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
@@ -29,6 +39,17 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
     return [...set].sort()
   }, [saturdays, busDate])
 
+  // Which upcoming Saturdays this family has already signed up for (dots on the chips)
+  useEffect(() => {
+    if (!familyId) return
+    supabase
+      .from('signups')
+      .select('bus_date')
+      .eq('family_id', familyId)
+      .gte('bus_date', dateOptions[0])
+      .then(({ data }) => setSignedDates(new Set((data ?? []).map((r) => r.bus_date))))
+  }, [familyId, dateOptions, existing])
+
   // Load students + any existing signup whenever family/date changes
   useEffect(() => {
     if (!familyId) {
@@ -38,7 +59,6 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
     }
     let cancelled = false
     setLoading(true)
-    setMessage(null)
     Promise.all([
       supabase.from('students').select('*').eq('family_id', familyId).eq('active', true).order('sort').order('name'),
       supabase.from('signups').select('*, signup_students(student_id)').eq('family_id', familyId).eq('bus_date', busDate).maybeSingle(),
@@ -58,11 +78,13 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
         setTrip(s.trip)
         setGuest(s.guest_name ?? '')
         setComments(s.comments ?? '')
+        setShowExtra(Boolean(s.guest_name || s.comments))
       } else {
         setSelected(new Set(list.length === 1 ? [list[0].id] : []))
         setTrip('')
         setGuest('')
         setComments('')
+        setShowExtra(false)
       }
     })
     return () => {
@@ -70,18 +92,24 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
     }
   }, [familyId, busDate])
 
+  function pickDate(d: string) {
+    setMessage(null)
+    setBusDate(d)
+  }
+
   function toggle(id: string) {
     const next = new Set(selected)
     if (next.has(id)) next.delete(id)
     else next.add(id)
     setSelected(next)
+    if (message?.kind === 'error') setMessage(null)
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!trip) return setMessage({ kind: 'error', text: '利用方法を選んでください。 (Choose how you will ride.)' })
     if (selected.size === 0 && !guest.trim())
-      return setMessage({ kind: 'error', text: '生徒を1人以上選んでください。 (Choose at least one student.)' })
+      return setMessage({ kind: 'error', text: '乗る生徒を選んでください。' })
+    if (!trip) return setMessage({ kind: 'error', text: '「行き・帰り」を選んでください。' })
     setBusy(true)
     setMessage(null)
     const { error } = await supabase.rpc('submit_signup', {
@@ -97,7 +125,8 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
       setMessage({ kind: 'error', text: '保存できませんでした: ' + error.message })
       return
     }
-    setMessage({ kind: 'ok', text: `${formatDate(busDate)} の申込を${existing ? '更新' : '受け付け'}ました。 Saved.` })
+    setMessage({ kind: 'ok', text: `${formatDate(busDate)}の申込を${existing ? '更新' : '受け付け'}ました。` })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
     const { data } = await supabase.from('signups').select('*, signup_students(student_id)').eq('family_id', familyId).eq('bus_date', busDate).maybeSingle()
     setExisting(data as Signup | null)
   }
@@ -113,93 +142,150 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
     setTrip('')
     setGuest('')
     setComments('')
-    setMessage({ kind: 'ok', text: `${formatDate(busDate)} の申込を取り消しました。 Signup removed.` })
+    setMessage({ kind: 'ok', text: `${formatDate(busDate)}の申込を取り消しました。` })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const locked = !profile.isAdmin && busDate < todayNY()
+  const family = profile.families.find((f) => f.id === familyId)
 
   return (
-    <div className="card">
-      <h1>Weekly Signup <span className="muted small">週ごとのバス申込</span></h1>
-      <form onSubmit={submit}>
-        <label className="field">
-          <span>バス利用日（土曜日） / Bus date (Saturday) *</span>
-          <select value={busDate} onChange={(e) => setBusDate(e.target.value)}>
-            {dateOptions.map((d) => (
-              <option key={d} value={d}>{formatDate(d)}</option>
+    <form className="signup" onSubmit={submit}>
+      <h1 className="page-title">バス申込 <small>Weekly signup</small></h1>
+
+      {message && (
+        <div className={message.kind === 'ok' ? 'banner success' : 'banner error'} role="status">
+          {message.text}
+          {message.kind === 'ok' && <a href={href('/my')}>申込履歴を見る →</a>}
+        </div>
+      )}
+
+      <section className="section">
+        <div className="section-label">バス利用日（土曜日）</div>
+        <div className="chips" role="radiogroup" aria-label="バス利用日">
+          {dateOptions.map((d) => {
+            const { md, rel } = chipLabel(d, saturdays)
+            return (
+              <button
+                type="button"
+                key={d}
+                role="radio"
+                aria-checked={busDate === d}
+                className={'chip-date' + (busDate === d ? ' on' : '')}
+                onClick={() => pickDate(d)}
+              >
+                <span className="chip-rel">{rel || '土'}</span>
+                <span className="chip-md">{md}</span>
+                {signedDates.has(d) && <span className="chip-dot" title="申込済み">申込済</span>}
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {profile.families.length > 1 && (
+        <section className="section">
+          <label className="section-label" htmlFor="family">家族</label>
+          <select id="family" className="big-select" value={familyId} onChange={(e) => setFamilyId(e.target.value)} required>
+            <option value="">選んでください</option>
+            {profile.families.map((f) => (
+              <option key={f.id} value={f.id}>{f.name}</option>
             ))}
           </select>
-        </label>
+        </section>
+      )}
 
-        {profile.families.length > 1 && (
-          <label className="field">
-            <span>家族 / Family *</span>
-            <select value={familyId} onChange={(e) => setFamilyId(e.target.value)} required>
-              <option value="">選んでください / Choose…</option>
-              {profile.families.map((f) => (
-                <option key={f.id} value={f.id}>{f.name}</option>
-              ))}
-            </select>
-          </label>
-        )}
-        {profile.families.length === 1 && <p className="muted">家族 / Family: <b>{profile.families[0].name}</b></p>}
+      {familyId && (
+        <>
+          {existing && !message && (
+            <div className="banner info">
+              <b>{formatDate(busDate)}</b>は申込済みです。変更して「更新する」を押してください。
+            </div>
+          )}
 
-        {familyId && (
-          <>
-            {existing && (
-              <div className="notice">
-                この日はすでに申込済みです。変更して「更新」を押すか、取り消してください。
-                <div className="muted small">You already signed up for this date. Change it and press Update, or remove it.</div>
-              </div>
-            )}
+          <section className="section">
+            <div className="section-label">
+              乗る生徒{family && profile.families.length === 1 && <span className="muted"> ・ {family.name}</span>}
+            </div>
+            {loading && <div className="muted pad">読み込み中…</div>}
+            {!loading && students.length === 0 && <div className="muted pad">生徒が登録されていません。バス係にご連絡ください。</div>}
+            <div className="options">
+              {students.map((s) => {
+                const on = selected.has(s.id)
+                return (
+                  <button
+                    type="button"
+                    key={s.id}
+                    role="checkbox"
+                    aria-checked={on}
+                    disabled={locked}
+                    className={'option' + (on ? ' on' : '')}
+                    onClick={() => toggle(s.id)}
+                  >
+                    <span className="tick">{on && <IconCheck />}</span>
+                    <span className="option-text">
+                      <span className="option-title">{s.name}</span>
+                      {s.grade && <span className="option-sub">{s.grade}</span>}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
 
-            <fieldset className="field">
-              <legend>生徒 / Students *</legend>
-              {loading && <div className="muted">読み込み中…</div>}
-              {!loading && students.length === 0 && <div className="muted">生徒が登録されていません。バス係にご連絡ください。</div>}
-              {students.map((s) => (
-                <label key={s.id} className="check">
-                  <input type="checkbox" checked={selected.has(s.id)} onChange={() => toggle(s.id)} disabled={locked} />
-                  <span>{s.name}{s.grade && <span className="muted small"> {s.grade}</span>}</span>
-                </label>
-              ))}
-            </fieldset>
-
-            <label className="field">
-              <span>一回限りのゲスト / One-time guest name</span>
-              <input value={guest} onChange={(e) => setGuest(e.target.value)} disabled={locked} placeholder="例: 祖父 / e.g. grandparent" />
-            </label>
-
-            <fieldset className="field">
-              <legend>利用方法 / Ride *</legend>
+          <section className="section">
+            <div className="section-label">行き・帰り</div>
+            <div className="trip-grid" role="radiogroup" aria-label="行き・帰り">
               {TRIP_ORDER.map((t) => (
-                <label key={t} className="check">
-                  <input type="radio" name="trip" checked={trip === t} onChange={() => setTrip(t)} disabled={locked} />
-                  <span>{TRIP_LABELS[t].ja} <span className="muted small">{TRIP_LABELS[t].en}</span></span>
-                </label>
+                <button
+                  type="button"
+                  key={t}
+                  role="radio"
+                  aria-checked={trip === t}
+                  disabled={locked}
+                  className={'trip' + (trip === t ? ' on' : '') + (t === 'none' ? ' none' : '')}
+                  onClick={() => { setTrip(t); if (message?.kind === 'error') setMessage(null) }}
+                >
+                  <span className="option-title">{TRIP_LABELS[t].ja.replace('（行き・帰り）', '')}</span>
+                  <span className="option-sub">{TRIP_HINT[t]}</span>
+                </button>
               ))}
-            </fieldset>
+            </div>
+          </section>
 
-            <label className="field">
-              <span>コメント / Comments</span>
-              <textarea rows={3} value={comments} onChange={(e) => setComments(e.target.value)} disabled={locked} />
-            </label>
-
-            {locked ? (
-              <p className="muted">過去の日付は変更できません。 (Past dates can't be changed.)</p>
+          <section className="section">
+            {!showExtra ? (
+              <button type="button" className="link-btn" onClick={() => setShowExtra(true)}>
+                ＋ ゲスト・コメントを追加（任意）
+              </button>
             ) : (
-              <div className="row">
-                <button className="btn primary" disabled={busy || loading}>{existing ? '更新 / Update' : '送信 / Submit'}</button>
-                {existing && (
-                  <button type="button" className="btn danger" disabled={busy} onClick={cancelSignup}>この日の申込を取り消す / Remove</button>
-                )}
-              </div>
+              <>
+                <label className="field">
+                  <span className="section-label">一回限りのゲスト（任意）</span>
+                  <input value={guest} onChange={(e) => setGuest(e.target.value)} disabled={locked} placeholder="例：祖父、お友達の名前" />
+                </label>
+                <label className="field">
+                  <span className="section-label">コメント（任意）</span>
+                  <textarea rows={3} value={comments} onChange={(e) => setComments(e.target.value)} disabled={locked} placeholder="バス係への連絡事項" />
+                </label>
+              </>
             )}
-          </>
-        )}
-        {message && <div className={message.kind === 'ok' ? 'success' : 'error'}>{message.text}</div>}
-        {message?.kind === 'ok' && <p><a href={href('/my')}>申込履歴を見る / View my signups →</a></p>}
-      </form>
-    </div>
+          </section>
+
+          {locked ? (
+            <p className="muted pad">過去の日付は変更できません。</p>
+          ) : (
+            <div className="actionbar">
+              {existing && (
+                <button type="button" className="btn danger" disabled={busy} onClick={cancelSignup}>取り消す</button>
+              )}
+              <button className="btn primary grow" disabled={busy || loading}>
+                {busy ? '送信中…' : existing ? '更新する' : `${chipLabel(busDate, saturdays).md} を申し込む`}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </form>
   )
 }

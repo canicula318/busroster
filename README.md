@@ -1,4 +1,4 @@
-# BusRoster
+# サミットライン（補習校バス申込）
 
 Weekly bus signup for NJ Japanese Weekend School families. Replaces the Glide app.
 

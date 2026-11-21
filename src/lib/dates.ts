@@ -42,3 +42,11 @@ export function formatDate(d: string): string {
 export function formatDateTime(ts: string): string {
   return new Intl.DateTimeFormat('ja-JP', { timeZone: TZ, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(ts))
 }
+
+/** Short label for date chips: "11/21" plus 今週 / 来週 for the next two Saturdays. */
+export function chipLabel(d: string, upcoming: string[]): { md: string; rel: string } {
+  const [, m, day] = d.split('-').map(Number)
+  const i = upcoming.indexOf(d)
+  const rel = i === 0 ? (d === todayNY() ? '今日' : '今週') : i === 1 ? '来週' : ''
+  return { md: `${m}/${day}`, rel }
+}

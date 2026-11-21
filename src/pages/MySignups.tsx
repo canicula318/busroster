@@ -36,8 +36,8 @@ export default function MySignups({ profile }: { profile: Profile }) {
     load()
   }, [profile])
 
-  if (error) return <div className="card error">{error}</div>
-  if (!signups) return <div className="card muted">読み込み中…</div>
+  if (error) return <div className="banner error">{error}</div>
+  if (!signups) return <div className="muted pad">読み込み中…</div>
 
   const today = todayNY()
   const upcoming = signups.filter((s) => s.bus_date >= today).reverse()
@@ -50,27 +50,27 @@ export default function MySignups({ profile }: { profile: Profile }) {
         <div className="date">{formatDate(s.bus_date)}{familyIds && familyIds.length > 1 && <span className="muted small"> {famName(s.family_id)}</span>}</div>
         <div>{s.signup_students.map((x) => students.get(x.student_id)?.name).filter(Boolean).join('、')}</div>
         {s.guest_name && <div className="muted small">ゲスト: {s.guest_name}</div>}
-        <span className="trip">{TRIP_LABELS[s.trip].ja}</span>
-        {s.comments && <div className="muted small">{s.comments}</div>}
+        <span className="trip-tag">{TRIP_LABELS[s.trip].ja}</span>
+        {s.comments && <div className="comment">💬 {s.comments}</div>}
       </div>
-      {editable && <a className="btn small" href={href('/', { date: s.bus_date, family: s.family_id })}>変更 Edit</a>}
+      {editable && <a className="btn small" href={href('/', { date: s.bus_date, family: s.family_id })}>変更</a>}
     </li>
   )
 
   return (
-    <div className="card">
-      <h1>申込履歴 <span className="muted small">My signups</span></h1>
+    <div className="page">
+      <h1 className="page-title">申込履歴 <small>My signups</small></h1>
       {familyIds?.length === 0 && <p className="muted">このアカウントには家族が登録されていません。</p>}
-      <h2>これから / Upcoming</h2>
+      <h2 className="section-label">これから</h2>
       {upcoming.length === 0 ? (
-        <p className="muted">申込はありません。 <a href={href('/')}>申込する →</a></p>
+        <div className="empty">まだ申込はありません。<a className="btn primary" href={href('/')}>バスを申し込む</a></div>
       ) : (
         <ul className="signup-list">{upcoming.map((s) => renderItem(s, true))}</ul>
       )}
       {past.length > 0 && (
         <>
-          <h2>過去 / Past</h2>
-          <ul className="signup-list">{past.map((s) => renderItem(s, false))}</ul>
+          <h2 className="section-label">過去</h2>
+          <ul className="signup-list past">{past.map((s) => renderItem(s, false))}</ul>
         </>
       )}
     </div>
