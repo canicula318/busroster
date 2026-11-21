@@ -36,6 +36,22 @@ export default function Roster({ profile, params }: { profile: Profile; params: 
   const groups = useMemo(() => (rows ? byStop(rows, profile.stops) : []), [rows, profile.stops])
   const message = useMemo(() => (rows ? lineMessage(date, rows, profile.stops) : ''), [rows, date, profile.stops])
   const changed = rows?.filter((r) => r.changed) ?? []
+  // Changes grouped by family (in route order), including families that only left a comment
+  const changeFamilies = useMemo(() => {
+    const out: { familyId: string; familyName: string; stopName: string; rows: RosterRow[]; comments: string | null }[] = []
+    for (const g of groups) {
+      for (const r of g.rows) {
+        if (!r.changed && !r.comments) continue
+        let f = out.find((x) => x.familyId === r.family_id)
+        if (!f) {
+          f = { familyId: r.family_id, familyName: r.family_name, stopName: g.stop?.name ?? '', rows: [], comments: r.comments }
+          out.push(f)
+        }
+        if (r.changed) f.rows.push(r)
+      }
+    }
+    return out
+  }, [groups])
   const totalOut = groups.reduce((n, g) => n + g.out, 0)
   const totalRet = groups.reduce((n, g) => n + g.ret, 0)
 
@@ -121,25 +137,29 @@ export default function Roster({ profile, params }: { profile: Profile; params: 
 
           <section className="section">
             <h2 className="section-label">今週の変更</h2>
-            {changed.length === 0 ? (
+            {changeFamilies.length === 0 ? (
               <div className="empty">変更はありません。全員往復です。</div>
             ) : (
-              <ul className="change-list">
-                {groups.map((g) =>
-                  g.rows.filter((r) => r.changed).map((r) => (
-                    <li key={r.person_id} className={'trip-' + r.trip}>
-                      <div>
-                        <div className="option-title">
+              <ul className="family-changes">
+                {changeFamilies.map((f) => (
+                  <li key={f.familyId}>
+                    <div className="fc-head">
+                      <span className="option-title">{f.familyName}</span>
+                      <span className="muted small">{f.stopName}</span>
+                      {profile.isAdmin && <a className="edit-link" href={href('/', { date, family: f.familyId })}>編集</a>}
+                    </div>
+                    {f.rows.map((r) => (
+                      <div key={r.person_id} className={'fc-row trip-' + r.trip}>
+                        <span>
                           {r.kind === 'guest' && <span className="pill pink">ゲスト</span>}
                           {personLabel(r)}
-                        </div>
-                        <div className="option-sub">{r.kind === 'guest' ? r.family_name : r.name} ・ {g.stop?.name ?? ''}</div>
+                        </span>
+                        <span className="trip-badge">{TRIP_LABELS[r.trip].ja}</span>
                       </div>
-                      <span className="trip-badge">{TRIP_LABELS[r.trip].ja}</span>
-                      {profile.isAdmin && <a className="edit-link" href={href('/', { date, family: r.family_id })}>編集</a>}
-                    </li>
-                  )),
-                )}
+                    ))}
+                    {f.comments && <div className="fc-comment">💬 {f.comments}</div>}
+                  </li>
+                ))}
               </ul>
             )}
           </section>

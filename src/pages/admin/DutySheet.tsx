@@ -84,7 +84,6 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
   const school = profile.stops.find((s) => s.kind === 'school')
   const headerContacts = contacts.filter((c) => !c.admins_only)
   const unlock = contacts.find((c) => c.admins_only && c.label.includes('ロック'))
-  const comments = [...new Map(data.filter((r) => r.comments).map((r) => [r.family_id, r])).values()]
 
   // Not riding this leg: bold × on a shaded cell so it is obvious on paper
   const mark = (v: boolean) => (v ? null : <span className="na" aria-label="乗らない">×</span>)
@@ -151,14 +150,6 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
           </tbody>
         </table>
 
-        {comments.length > 0 && (
-          <div className="sheet-notes">
-            <b>連絡事項：</b>
-            {comments.map((c) => (
-              <div key={c.family_id}>・{c.family_name}：{c.comments}</div>
-            ))}
-          </div>
-        )}
 
         <div className="sheet-schedule">
           <div className="lbl">To School</div>
