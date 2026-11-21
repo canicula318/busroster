@@ -93,6 +93,7 @@ export default function Login() {
           </>
         )}
         {error && <div className="error">{error}</div>}
+        <p className="muted small center-text"><a href={import.meta.env.BASE_URL + 'privacy.html'}>プライバシーポリシー</a></p>
       </div>
     </div>
   )
