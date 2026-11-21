@@ -28,10 +28,14 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
   const [busDate, setBusDate] = useState(
     initialDate && isSaturday(initialDate) && (initialDate >= todayNY() || profile.isAdmin) ? initialDate : saturdays[0],
   )
-  const [familyId, setFamilyId] = useState(
-    params.get('family') ??
-      (profile.families.length === 1 ? profile.families[0].id : profile.ownFamilyIds.length === 1 ? profile.ownFamilyIds[0] : ''),
-  )
+  // Families shown here: only the signed-in parent's own family (everyone is an admin,
+  // so profile.families holds every family). Admins with no family of their own see all.
+  const myFamilies = profile.ownFamilyIds.length
+    ? profile.families.filter((f) => profile.ownFamilyIds.includes(f.id))
+    : profile.families
+  const [familyId, setFamilyId] = useState(params.get('family') ?? (myFamilies.length === 1 ? myFamilies[0].id : ''))
+  // Opened from the roster's 編集 link for another family
+  const editingOther = !myFamilies.some((f) => f.id === familyId) && familyId !== ''
   const [students, setStudents] = useState<Student[]>([])
   const [existing, setExisting] = useState<Signup | null>(null)
   const [changedDates, setChangedDates] = useState<Set<string>>(new Set())
@@ -175,12 +179,12 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
         </div>
       </section>
 
-      {profile.families.length > 1 && (
+      {!editingOther && myFamilies.length > 1 && (
         <section className="section">
           <label className="section-label" htmlFor="family">家族</label>
           <select id="family" className="big-select" value={familyId} onChange={(e) => setFamilyId(e.target.value)} required>
             <option value="">選んでください</option>
-            {profile.families.map((f) => (
+            {myFamilies.map((f) => (
               <option key={f.id} value={f.id}>{f.name}</option>
             ))}
           </select>
@@ -196,7 +200,7 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
 
           <section className="section">
             <div className="section-label">
-              生徒{family && profile.families.length === 1 && <span className="muted"> ・ {family.name}</span>}
+              生徒{family && (myFamilies.length === 1 || editingOther) && <span className="muted"> ・ {family.name}</span>}
             </div>
             {loading && <div className="muted pad">読み込み中…</div>}
             {!loading && students.length === 0 && <div className="muted pad">生徒が登録されていません。バス係にご連絡ください。</div>}
