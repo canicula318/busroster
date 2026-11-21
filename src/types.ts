@@ -45,17 +45,35 @@ export interface Student {
   sort: number
 }
 
+/** A family's change notice for one Saturday (students not listed ride both ways as usual) */
 export interface Signup {
   id: string
   family_id: string
   bus_date: string
-  trip: Trip
-  guest_name: string | null
   comments: string | null
   created_by: string | null
   created_at: string
   updated_at: string
-  signup_students: { student_id: string }[]
+  signup_students: { student_id: string; trip: Trip }[]
+  signup_guests: { id: string; name: string; trip: Trip; sort: number }[]
+}
+
+export const SIGNUP_SELECT = '*, signup_students(student_id, trip), signup_guests(id, name, trip, sort)'
+
+/** One row of the weekly roster (from the weekly_roster database function) */
+export interface RosterRow {
+  kind: 'student' | 'guest'
+  person_id: string
+  name: string
+  name_ja: string | null
+  grade: string | null
+  family_id: string
+  family_name: string
+  stop_id: string | null
+  trip: Trip
+  changed: boolean
+  comments: string | null
+  sort: number
 }
 
 export interface Fare {
@@ -68,10 +86,10 @@ export interface Fare {
 }
 
 export const TRIP_LABELS: Record<Trip, { ja: string; en: string }> = {
-  both: { ja: '往復（行き・帰り）', en: 'Both ways' },
+  both: { ja: '往復', en: 'Both ways' },
   outbound: { ja: '行きのみ', en: 'To school only' },
   return: { ja: '帰りのみ', en: 'Home only' },
-  none: { ja: '利用しません', en: 'Not riding' },
+  none: { ja: 'お休み', en: 'Absent' },
 }
 
 export const TRIP_ORDER: Trip[] = ['both', 'outbound', 'return', 'none']

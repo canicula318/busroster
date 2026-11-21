@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../supabase'
 import type { Profile } from '../../App'
-import type { Contact, Signup, Student } from '../../types'
+import type { Contact, RosterRow } from '../../types'
+import { fetchRoster } from '../../lib/roster'
 import { ridesOutbound, ridesReturn } from '../../types'
 import { formatDate, upcomingSaturdays } from '../../lib/dates'
 import { href } from '../../lib/router'
@@ -13,8 +14,8 @@ interface Row {
   en: string
   grade: string
   stop: string
-  out: boolean | null // null = not part of a signup (full-roster mode)
-  ret: boolean | null
+  out: boolean
+  ret: boolean
   phone: string
 }
 
@@ -24,77 +25,57 @@ const MIN_ROWS = 24
 export default function DutySheet({ profile, params }: { profile: Profile; params: URLSearchParams }) {
   const date = params.get('date') ?? upcomingSaturdays(1)[0]
   const [mode, setMode] = useState<'signed' | 'all'>('signed')
-  const [signups, setSignups] = useState<Signup[] | null>(null)
-  const [students, setStudents] = useState<Student[]>([])
+  const [data, setData] = useState<RosterRow[] | null>(null)
   const [contacts, setContacts] = useState<Contact[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([
-      supabase.from('signups').select('*, signup_students(student_id)').eq('bus_date', date),
-      supabase.from('students').select('*').order('sort').order('name'),
-      supabase.from('contacts').select('*').order('sort'),
-    ]).then(([su, st, co]) => {
-      const err = su.error ?? st.error ?? co.error
-      if (err) return setError(err.message)
-      setSignups(su.data as Signup[])
-      setStudents(st.data as Student[])
-      setContacts(co.data as Contact[])
-    })
+    Promise.all([fetchRoster(date), supabase.from('contacts').select('*').order('sort')])
+      .then(([r, co]) => {
+        if (co.error) throw co.error
+        setData(r)
+        setContacts(co.data as Contact[])
+      })
+      .catch((e) => setError(e.message))
   }, [date])
 
   const famById = useMemo(() => new Map(profile.families.map((f) => [f.id, f])), [profile.families])
   const stopById = useMemo(() => new Map(profile.stops.map((s) => [s.id, s])), [profile.stops])
-  const stopOfFamily = (familyId: string) => stopById.get(famById.get(familyId)?.stop_id ?? '')
 
   const rows: Row[] = useMemo(() => {
-    if (!signups) return []
-    const bySignup = new Map<string, Signup>()
-    signups.forEach((s) => s.signup_students.forEach((x) => bySignup.set(x.student_id, s)))
-    const list = students
-      .filter((s) => (mode === 'all' ? s.active : bySignup.has(s.id)))
-      .map((s) => {
-        const su = bySignup.get(s.id)
-        const stop = stopOfFamily(s.family_id)
+    if (!data) return []
+    const list = data
+      .filter((r) => (mode === 'all' ? true : r.trip !== 'none'))
+      .map((r) => {
+        const stop = stopById.get(r.stop_id ?? '')
         return {
-          s,
-          sort: (stop?.sort ?? 99) * 1000 + s.sort,
+          family: r.family_id,
+          sort: (stop?.sort ?? 99) * 1000 + r.sort,
           row: {
-            key: s.id,
-            ja: s.name_ja ?? '',
-            en: s.name,
-            grade: s.grade ?? '',
+            key: r.person_id,
+            ja: r.kind === 'guest' ? r.name : r.name_ja ?? '',
+            en: r.kind === 'guest' ? '（ゲスト）' : r.name,
+            grade: r.grade ?? '',
             stop: stop?.short_name ?? '',
-            out: su ? ridesOutbound(su.trip) : null,
-            ret: su ? ridesReturn(su.trip) : null,
+            out: ridesOutbound(r.trip),
+            ret: ridesReturn(r.trip),
             phone: '',
           } as Row,
         }
       })
-    // Guests
-    signups.filter((su) => su.guest_name).forEach((su) => {
-      const stop = stopOfFamily(su.family_id)
-      list.push({
-        s: { family_id: su.family_id } as Student,
-        sort: (stop?.sort ?? 99) * 1000 + 900,
-        row: { key: 'g' + su.id, ja: su.guest_name!, en: '（ゲスト）', grade: '', stop: stop?.short_name ?? '', out: ridesOutbound(su.trip), ret: ridesReturn(su.trip), phone: '' },
-      })
-    })
-    list.sort((a, b) => a.sort - b.sort)
-    // Phone number on the first row of each family, as on the paper sheet
+      .sort((a, b) => a.sort - b.sort)
     const seen = new Set<string>()
     for (const item of list) {
-      if (!seen.has(item.s.family_id)) {
-        seen.add(item.s.family_id)
-        item.row.phone = (famById.get(item.s.family_id)?.phone ?? '').replace(/ \/ /g, '  ')
+      if (!seen.has(item.family)) {
+        seen.add(item.family)
+        item.row.phone = (famById.get(item.family)?.phone ?? '').replace(/ \/ /g, '  ')
       }
     }
     return list.map((x) => x.row)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signups, students, mode, famById, stopById])
+  }, [data, mode, famById, stopById])
 
   if (error) return <div className="banner error">{error}</div>
-  if (!signups) return <div className="muted pad">読み込み中…</div>
+  if (!data) return <div className="muted pad">読み込み中…</div>
 
   const outCount = rows.filter((r) => r.out).length
   const retCount = rows.filter((r) => r.ret).length
@@ -104,17 +85,17 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
   const school = profile.stops.find((s) => s.kind === 'school')
   const headerContacts = contacts.filter((c) => !c.admins_only)
   const unlock = contacts.find((c) => c.admins_only && c.label.includes('ロック'))
-  const comments = signups.filter((s) => s.comments)
+  const comments = [...new Map(data.filter((r) => r.comments).map((r) => [r.family_id, r])).values()]
 
-  const mark = (v: boolean | null) => (v === false ? <span className="na">—</span> : null)
+  const mark = (v: boolean) => (v ? null : <span className="na">—</span>)
 
   return (
     <div className="sheet-wrap">
       <div className="sheet-tools no-print">
-        <a className="btn small" href={href('/admin/roster')}>← 名簿へ</a>
+        <a className="btn small" href={href('/roster', { date })}>← 名簿へ</a>
         <div className="seg">
-          <button className={mode === 'signed' ? 'on' : ''} onClick={() => setMode('signed')}>申込者のみ</button>
-          <button className={mode === 'all' ? 'on' : ''} onClick={() => setMode('all')}>在籍者全員</button>
+          <button className={mode === 'signed' ? 'on' : ''} onClick={() => setMode('signed')}>乗車する人</button>
+          <button className={mode === 'all' ? 'on' : ''} onClick={() => setMode('all')}>お休みも含める</button>
         </div>
         <button className="btn small primary" onClick={() => window.print()}><IconPrint />&nbsp;印刷</button>
       </div>
@@ -164,7 +145,7 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
               </tr>
             ))}
             <tr className="totals">
-              <td colSpan={5} className="right">{mode === 'signed' ? `予定　行き ${outCount}人 ／ 帰り ${retCount}人` : `在籍 ${rows.length}人`}</td>
+              <td colSpan={5} className="right">{`予定　行き ${outCount}人 ／ 帰り ${retCount}人`}</td>
               <td className="chk">行き</td><td className="chk">帰り</td><td />
             </tr>
             <tr className="totals">
@@ -178,7 +159,7 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
           <div className="sheet-notes">
             <b>連絡事項：</b>
             {comments.map((c) => (
-              <div key={c.id}>・{famById.get(c.family_id)?.name}：{c.comments}</div>
+              <div key={c.family_id}>・{c.family_name}：{c.comments}</div>
             ))}
           </div>
         )}

@@ -275,6 +275,47 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
   .sheet-contacts > div { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
+
+/* ---------- Weekly change notice ---------- */
+.lead { margin: -0.4rem 0 1rem; font-size: 0.92rem; color: #3a3a3c; }
+.student-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.student-card { background: #fff; border: 1.5px solid var(--line); border-radius: 16px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.student-card.changed { border-color: #f0b5c3; background: var(--pink-soft); }
+.student-head { display: flex; flex-direction: column; padding: 0 0.15rem; }
+.seg4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: #f0f0ec; border-radius: 12px; padding: 4px; }
+.seg4.three { grid-template-columns: repeat(3, 1fr); }
+.seg4 button { border: 0; background: none; min-height: 44px; border-radius: 9px; font-weight: 700; font-size: 0.88rem; color: #48484a; cursor: pointer; padding: 0 0.2rem; }
+.seg4 button.on { background: var(--accent); color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+.seg4 button.normal.on { background: #fff; color: var(--accent); }
+.seg4 button.none.on { background: #6e6e73; color: #fff; }
+.seg4 button:disabled { opacity: 0.55; cursor: default; }
+.guest-card { margin-bottom: 0.6rem; }
+.guest-card .row input { flex: 1; }
+.icon-x { flex: none; width: 44px; height: 44px; border: 0; background: #fff; border-radius: 12px; font-size: 1.4rem; color: var(--muted); cursor: pointer; }
+.add-btn { width: 100%; min-height: 52px; border: 1.5px dashed #c7c7cc; background: transparent; border-radius: 14px; color: var(--accent); font-weight: 700; cursor: pointer; }
+.change-line { margin-top: 0.15rem; }
+.change-line .trip-tag { margin: 0 0 0 0.3rem; }
+
+/* ---------- Roster: changes & LINE ---------- */
+.change-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.change-list li { background: #fff; border: 1px solid var(--line); border-left: 5px solid var(--accent); border-radius: 14px; padding: 0.7rem 0.9rem; display: flex; align-items: center; gap: 0.6rem; }
+.change-list li > div { flex: 1; min-width: 0; }
+.change-list li.trip-none { border-left-color: #8e8e93; }
+.change-list li.trip-outbound, .change-list li.trip-return { border-left-color: var(--pink); }
+.trip-badge { flex: none; font-size: 0.82rem; font-weight: 800; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 0.2rem 0.7rem; }
+.trip-none .trip-badge { background: #eee; color: #48484a; }
+.edit-link { font-size: 0.85rem; color: var(--muted); }
+.pill.pink { background: var(--pink-soft); color: #b4405e; margin: 0 0.35rem 0 0; }
+.line-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 0.9rem; }
+.line-preview { white-space: pre-wrap; font-family: inherit; font-size: 0.88rem; line-height: 1.6; background: #f7f7f5; border-radius: 12px; padding: 0.8rem; margin: 0 0 0.75rem; max-height: 340px; overflow: auto; }
+.line-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.line-actions .btn { flex: 1 1 auto; gap: 0.2rem; }
+.btn.line { background: #06c755; border-color: #06c755; color: #fff; flex: 2 1 100%; }
+.full-group { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 0.6rem 0.9rem; margin-top: 0.6rem; }
+.full-group-head { font-weight: 800; padding: 0.2rem 0 0.4rem; border-bottom: 1px solid var(--line); }
+.full-row { display: flex; justify-content: space-between; align-items: center; padding: 0.45rem 0; border-bottom: 1px solid #f0f0ec; gap: 0.5rem; }
+.full-row:last-child { border-bottom: 0; }
+
 /* ---------- Phones ---------- */
 @media (max-width: 720px) {
   .toptabs { display: none; }
@@ -289,7 +330,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
   }
   .tabbar a {
     flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    height: var(--tabbar-h); text-decoration: none; color: #8e8e93; font-size: 0.72rem; font-weight: 700;
+    height: var(--tabbar-h); text-decoration: none; color: #8e8e93; font-size: 0.68rem; font-weight: 700; white-space: nowrap;
   }
   .tabbar a.active { color: var(--accent); }
   .shell .container { padding-bottom: calc(var(--tabbar-h) + var(--safe-b) + 1rem); }

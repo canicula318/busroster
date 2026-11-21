@@ -6,13 +6,20 @@ Weekly bus signup for NJ Japanese Weekend School families. Replaces the Glide ap
 - **Database & sign-in:** Supabase project `busroster` (Postgres, email sign-in links, row-level security)
 - **Email:** sign-in emails are sent by Resend from `busroster@mail.canicula.me`
 
+## Weekly process
+
+1. Every active student rides **both ways** by default. A family only sends a **変更連絡** when that week is different (お休み / 行きのみ / 帰りのみ, or a one-time guest with their own trip).
+2. The parent on duty (当番) opens **名簿**, checks the week's changes and counts, and taps **LINEで送る** to post the message to the LINE group.
+3. Any mistakes are corrected in LINE.
+
 ## Who can do what
 
 | | Parents | Admins |
 |---|---|---|
 | Sign in | Only with an email listed for their family | Any email in the `admins` table |
-| Signups | Create / change / remove their own family's, for today or later | Everyone's, any date |
-| See other families | No | Yes (Roster, Families tabs) |
+| Change notices | Their own family's, for today or later | Everyone's, any date |
+| Weekly roster (names, stop, trip, comments) | Yes, read-only (for the 当番) | Yes |
+| Emails, phone numbers, duty sheet, Families tab | No | Yes |
 | Fares | View | Edit in Supabase Table Editor |
 
 These rules are enforced by the database (see `supabase/migrations/0001_initial_schema.sql`), not just hidden in the UI.

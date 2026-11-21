@@ -8,7 +8,7 @@ import SignupForm from './pages/SignupForm'
 import MySignups from './pages/MySignups'
 import Info from './pages/Info'
 import DutySheet from './pages/admin/DutySheet'
-import Roster from './pages/admin/Roster'
+import Roster from './pages/Roster'
 import Families from './pages/admin/Families'
 import { Brand } from './components/Brand'
 import { IconFamilies, IconHistory, IconLogout, IconBus, IconRoster, IconSignup } from './components/Icons'
@@ -107,8 +107,9 @@ export default function App() {
     case '/admin/sheet':
       page = profile.isAdmin ? <DutySheet profile={profile} params={route.params} /> : null
       break
+    case '/roster':
     case '/admin/roster':
-      page = profile.isAdmin ? <Roster profile={profile} /> : null
+      page = <Roster profile={profile} params={route.params} />
       break
     case '/admin/families':
       page = profile.isAdmin ? <Families onChanged={() => loadProfile(session)} /> : null
@@ -126,12 +127,13 @@ export default function App() {
 
 function Shell({ profile, path, children }: { profile: Profile | null; path: string; children: React.ReactNode }) {
   const tabs: [string, string, React.ReactNode][] = [
-    ['/', '申込', <IconSignup />],
-    ['/my', '履歴', <IconHistory />],
+    ['/', '変更連絡', <IconSignup />],
+    ['/roster', '名簿', <IconRoster />],
+    ['/my', '送信済み', <IconHistory />],
     ['/info', '案内', <IconBus />],
   ]
   if (profile?.isAdmin) {
-    tabs.push(['/admin/roster', '名簿', <IconRoster />], ['/admin/families', '家族', <IconFamilies />])
+    tabs.push(['/admin/families', '家族', <IconFamilies />])
   }
   return (
     <div className={'shell' + (tabs.length > 3 ? ' admin' : '') + (path === '/admin/sheet' ? ' print-mode' : '')}>
