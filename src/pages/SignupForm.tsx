@@ -20,7 +20,10 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
   const [busDate, setBusDate] = useState(
     initialDate && isSaturday(initialDate) && (initialDate >= todayNY() || profile.isAdmin) ? initialDate : saturdays[0],
   )
-  const [familyId, setFamilyId] = useState(params.get('family') ?? (profile.families.length === 1 ? profile.families[0].id : ''))
+  const [familyId, setFamilyId] = useState(
+    params.get('family') ??
+      (profile.families.length === 1 ? profile.families[0].id : profile.ownFamilyIds.length === 1 ? profile.ownFamilyIds[0] : ''),
+  )
   const [students, setStudents] = useState<Student[]>([])
   const [existing, setExisting] = useState<Signup | null>(null)
   const [signedDates, setSignedDates] = useState<Set<string>>(new Set())

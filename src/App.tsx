@@ -16,6 +16,8 @@ export interface Profile {
   email: string
   isAdmin: boolean
   families: Family[]
+  /** Families this email belongs to (for admins, `families` is everyone) */
+  ownFamilyIds: string[]
 }
 
 export default function App() {
@@ -39,15 +41,21 @@ export default function App() {
   const loadProfile = useCallback(async (s: Session) => {
     setProfileError(null)
     const email = (s.user.email ?? '').toLowerCase()
-    const [admins, families] = await Promise.all([
+    const [admins, families, own] = await Promise.all([
       supabase.from('admins').select('email').eq('email', email),
       supabase.from('families').select('*').order('name'),
+      supabase.from('family_emails').select('family_id').eq('email', email),
     ])
-    if (admins.error || families.error) {
-      setProfileError((admins.error ?? families.error)!.message)
+    if (admins.error || families.error || own.error) {
+      setProfileError((admins.error ?? families.error ?? own.error)!.message)
       return
     }
-    setProfile({ email, isAdmin: (admins.data ?? []).length > 0, families: families.data ?? [] })
+    setProfile({
+      email,
+      isAdmin: (admins.data ?? []).length > 0,
+      families: families.data ?? [],
+      ownFamilyIds: (own.data ?? []).map((r) => r.family_id),
+    })
   }, [])
 
   useEffect(() => {

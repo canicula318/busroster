@@ -15,11 +15,7 @@ export default function MySignups({ profile }: { profile: Profile }) {
 
   useEffect(() => {
     async function load() {
-      let ids = profile.families.map((f) => f.id)
-      if (profile.isAdmin) {
-        const { data } = await supabase.from('family_emails').select('family_id').eq('email', profile.email)
-        ids = (data ?? []).map((r) => r.family_id)
-      }
+      const ids = profile.isAdmin ? profile.ownFamilyIds : profile.families.map((f) => f.id)
       setFamilyIds(ids)
       if (ids.length === 0) {
         setSignups([])
