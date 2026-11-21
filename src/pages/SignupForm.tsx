@@ -14,7 +14,7 @@ interface Guest {
 
 const STUDENT_CHOICES: Trip[] = ['both', 'outbound', 'return', 'none']
 const GUEST_CHOICES: Trip[] = ['both', 'outbound', 'return']
-const CHOICE_LABEL: Record<Trip, string> = { both: '通常', outbound: '行きのみ', return: '帰りのみ', none: 'お休み' }
+const CHOICE_LABEL: Record<Trip, string> = { both: '通常', outbound: '行きのみ利用', return: '帰りのみ利用', none: 'お休み' }
 
 let guestKey = 1
 

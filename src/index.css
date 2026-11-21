@@ -289,7 +289,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .student-head { display: flex; flex-direction: column; padding: 0 0.15rem; }
 .seg4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: #f0f0ec; border-radius: 12px; padding: 4px; }
 .seg4.three { grid-template-columns: repeat(3, 1fr); }
-.seg4 button { border: 0; background: none; min-height: 44px; border-radius: 9px; font-weight: 700; font-size: 0.88rem; color: #48484a; cursor: pointer; padding: 0 0.2rem; }
+.seg4 button { border: 0; background: none; min-height: 48px; border-radius: 9px; font-weight: 700; font-size: 0.88rem; line-height: 1.25; color: #48484a; cursor: pointer; padding: 0.2rem; word-break: keep-all; }
+@media (max-width: 420px) { .seg4 button { font-size: 0.78rem; } }
 .seg4 button.on { background: var(--accent); color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
 .seg4 button.normal.on { background: #fff; color: var(--accent); }
 .seg4 button.none.on { background: #6e6e73; color: #fff; }

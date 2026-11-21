@@ -87,8 +87,8 @@ export interface Fare {
 
 export const TRIP_LABELS: Record<Trip, { ja: string; en: string }> = {
   both: { ja: '往復', en: 'Both ways' },
-  outbound: { ja: '行きのみ', en: 'To school only' },
-  return: { ja: '帰りのみ', en: 'Home only' },
+  outbound: { ja: '行きのみ利用', en: 'To school only' },
+  return: { ja: '帰りのみ利用', en: 'Home only' },
   none: { ja: 'お休み', en: 'Absent' },
 }
 
