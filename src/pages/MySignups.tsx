@@ -53,23 +53,23 @@ export default function MySignups({ profile }: { profile: Profile }) {
         ))}
         {s.comments && <div className="comment">💬 {s.comments}</div>}
       </div>
-      {editable && <a className="btn small" href={href('/', { date: s.bus_date, family: s.family_id })}>変更</a>}
+      {editable && <a className="btn small" href={href('/', { date: s.bus_date, family: s.family_id })}>修正する</a>}
     </li>
   )
 
   return (
     <div className="page">
-      <h1 className="page-title">送信済みの変更 <small>My changes</small></h1>
-      <p className="lead">ここにない週は、通常どおり全員往復です。</p>
-      <h2 className="section-label">これから</h2>
+      <h1 className="page-title">連絡履歴 <small>My notices</small></h1>
+      <p className="lead">これまでに送った変更連絡の一覧です。<br />ここに載っていない土曜日は、いつもどおり<b>全員往復</b>で乗車します。</p>
+      <h2 className="section-label">今後の連絡</h2>
       {upcoming.length === 0 ? (
-        <div className="empty">これからの変更はありません。<a className="btn primary" href={href('/')}>変更を連絡する</a></div>
+        <div className="empty">今後の変更連絡はありません。<br />すべての土曜日、いつもどおり全員往復です。<a className="btn primary" href={href('/')}>変更を連絡する</a></div>
       ) : (
         <ul className="signup-list">{upcoming.map((s) => renderItem(s, true))}</ul>
       )}
       {past.length > 0 && (
         <>
-          <h2 className="section-label">過去</h2>
+          <h2 className="section-label">過去の連絡</h2>
           <ul className="signup-list past">{past.map((s) => renderItem(s, false))}</ul>
         </>
       )}

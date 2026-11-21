@@ -205,7 +205,7 @@ export default function SignupForm({ profile, params }: { profile: Profile; para
           )}
 
           {existing && !message && (
-            <div className="banner info">{formatDate(busDate)}は変更を送信済みです。内容を直して「更新する」を押してください。</div>
+            <div className="banner info">{formatDate(busDate)}の変更連絡は送信済みです。内容を直す場合は、修正して「更新する」を押してください。</div>
           )}
 
           <section className="section">
