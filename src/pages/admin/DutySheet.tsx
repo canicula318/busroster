@@ -44,7 +44,6 @@ export default function DutySheet({ profile, params }: { profile: Profile; param
   const rows: Row[] = useMemo(() => {
     if (!data) return []
     const list = data
-      .filter((r) => r.trip !== 'none')
       .map((r) => {
         const stop = stopById.get(r.stop_id ?? '')
         return {
